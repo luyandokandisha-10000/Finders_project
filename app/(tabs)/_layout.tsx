@@ -1,21 +1,48 @@
-// template
 import { isLiquidGlassAvailable } from "expo-glass-effect";
-import { Tabs } from "expo-router";
+import { Tabs, router } from "expo-router";
 import { NativeTabs, Icon, Label } from "expo-router/unstable-native-tabs";
 import { BlurView } from "expo-blur";
-import { SymbolView } from "expo-symbols";
-import { Platform, StyleSheet, useColorScheme } from "react-native";
+import { Platform, StyleSheet, View, Pressable, useColorScheme } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-
 import Colors from "@/constants/colors";
+import { useAuth } from "@/lib/auth-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-//IMPORTANT: iOS 26 Exists, feel free to use NativeTabs for native tabs with liquid glass support.
+function ProfileButton() {
+  return (
+    <Pressable
+      onPress={() => router.push("/profile")}
+      style={{ marginRight: 16 }}
+      hitSlop={8}
+    >
+      <Ionicons name="person-circle-outline" size={28} color={Colors.light.primary} />
+    </Pressable>
+  );
+}
+
 function NativeTabLayout() {
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
         <Icon sf={{ default: "house", selected: "house.fill" }} />
         <Label>Home</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="discover">
+        <Icon sf={{ default: "magnifyingglass", selected: "magnifyingglass" }} />
+        <Label>Discover</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="post">
+        <Icon sf={{ default: "plus.circle", selected: "plus.circle.fill" }} />
+        <Label>Post</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="short-work">
+        <Icon sf={{ default: "bolt", selected: "bolt.fill" }} />
+        <Label>Short Work</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="jobs">
+        <Icon sf={{ default: "briefcase", selected: "briefcase.fill" }} />
+        <Label>Jobs</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -24,29 +51,46 @@ function NativeTabLayout() {
 function ClassicTabLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const isWeb = Platform.OS === "web";
+  const isIOS = Platform.OS === "ios";
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.light.tint,
+        tabBarActiveTintColor: Colors.light.primary,
         tabBarInactiveTintColor: Colors.light.tabIconDefault,
         headerShown: true,
+        headerRight: () => <ProfileButton />,
+        headerStyle: {
+          backgroundColor: Colors.light.surface,
+          ...(isWeb ? { height: 67 + 44 } : {}),
+        },
+        headerTitleStyle: {
+          fontFamily: "Inter_600SemiBold",
+          fontSize: 18,
+        },
+        tabBarLabelStyle: {
+          fontFamily: "Inter_500Medium",
+          fontSize: 11,
+        },
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: Platform.select({
-            ios: "transparent",
-            android: isDark ? "#000" : "#fff",
-          }),
-          borderTopWidth: 0,
+          backgroundColor: isIOS ? "transparent" : Colors.light.surface,
+          borderTopWidth: isWeb ? 1 : 0,
+          borderTopColor: Colors.light.border,
           elevation: 0,
+          ...(isWeb ? { height: 84 } : {}),
         },
         tabBarBackground: () =>
-          Platform.OS === "ios" ? (
+          isIOS ? (
             <BlurView
               intensity={100}
-              tint={isDark ? "dark" : "light"}
+              tint="light"
               style={StyleSheet.absoluteFill}
             />
+          ) : isWeb ? (
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.light.surface }]} />
           ) : null,
       }}
     >
@@ -54,8 +98,44 @@ function ClassicTabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => (
-            <SymbolView name="house" tintColor={color} size={24} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "home" : "home-outline"} size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="discover"
+        options={{
+          title: "Discover",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "search" : "search-outline"} size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="post"
+        options={{
+          title: "Post",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "add-circle" : "add-circle-outline"} size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="short-work"
+        options={{
+          title: "Short Work",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "flash" : "flash-outline"} size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="jobs"
+        options={{
+          title: "Jobs",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "briefcase" : "briefcase-outline"} size={22} color={color} />
           ),
         }}
       />

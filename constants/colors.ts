@@ -1,20 +1,22 @@
-const primary = "#0A66C2";
-const accent = "#057642";
+const gold = "#D4A017";
+const goldLight = "#F5E6B8";
 
 export default {
   light: {
-    text: "#191919",
-    textSecondary: "#666666",
-    background: "#F4F2EE",
+    text: "#1A1A1A",
+    textSecondary: "#6B6B6B",
+    background: "#F8F6F0",
     surface: "#FFFFFF",
-    primary,
-    accent,
-    tint: primary,
+    primary: gold,
+    accent: "#C49000",
+    tint: gold,
     tabIconDefault: "#999999",
-    tabIconSelected: primary,
-    border: "#E0E0E0",
-    inputBg: "#F3F3F3",
+    tabIconSelected: gold,
+    border: "#E8E4D9",
+    inputBg: "#F5F3ED",
     danger: "#CC1016",
     cardBg: "#FFFFFF",
+    dark: "#1A1A1A",
+    goldLight,
   },
 };

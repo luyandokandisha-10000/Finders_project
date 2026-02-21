@@ -6,7 +6,6 @@ import { Platform, StyleSheet, View, Pressable, useColorScheme } from "react-nat
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import Colors from "@/constants/colors";
-import { useAuth } from "@/lib/auth-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function ProfileButton() {
@@ -59,16 +58,18 @@ function ClassicTabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors.light.primary,
-        tabBarInactiveTintColor: Colors.light.tabIconDefault,
+        tabBarInactiveTintColor: "#888888",
         headerShown: true,
         headerRight: () => <ProfileButton />,
         headerStyle: {
-          backgroundColor: Colors.light.surface,
+          backgroundColor: Colors.light.dark,
           ...(isWeb ? { height: 67 + 44 } : {}),
         },
+        headerTintColor: Colors.light.primary,
         headerTitleStyle: {
           fontFamily: "Inter_600SemiBold",
           fontSize: 18,
+          color: Colors.light.primary,
         },
         tabBarLabelStyle: {
           fontFamily: "Inter_500Medium",
@@ -76,9 +77,9 @@ function ClassicTabLayout() {
         },
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "transparent" : Colors.light.surface,
+          backgroundColor: isIOS ? "transparent" : Colors.light.dark,
           borderTopWidth: isWeb ? 1 : 0,
-          borderTopColor: Colors.light.border,
+          borderTopColor: "#333333",
           elevation: 0,
           ...(isWeb ? { height: 84 } : {}),
         },
@@ -86,11 +87,11 @@ function ClassicTabLayout() {
           isIOS ? (
             <BlurView
               intensity={100}
-              tint="light"
+              tint="dark"
               style={StyleSheet.absoluteFill}
             />
           ) : isWeb ? (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.light.surface }]} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.light.dark }]} />
           ) : null,
       }}
     >

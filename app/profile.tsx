@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -22,28 +22,28 @@ const ROLES = [
     key: "Recruiter",
     icon: "people" as const,
     color: "#8B5CF6",
-    bg: "#F3F0FF",
+    bg: "#2A1F3D",
     desc: "I'm looking to hire talent",
   },
   {
     key: "Job Seeker",
     icon: "search" as const,
-    color: "#2563EB",
-    bg: "#EFF6FF",
+    color: "#3B82F6",
+    bg: "#1A2640",
     desc: "I'm looking for employment",
   },
   {
     key: "Intern",
     icon: "school" as const,
-    color: "#059669",
-    bg: "#ECFDF5",
+    color: "#10B981",
+    bg: "#1A2A20",
     desc: "I'm seeking internship opportunities",
   },
   {
     key: "Hustler",
     icon: "rocket" as const,
-    color: "#EA580C",
-    bg: "#FFF7ED",
+    color: "#F59E0B",
+    bg: "#2A2A1A",
     desc: "I do freelance and gig work",
   },
 ];
@@ -130,7 +130,7 @@ export default function ProfileScreen() {
           value={fullName}
           onChangeText={setFullName}
           placeholder="Enter your full name"
-          placeholderTextColor={Colors.light.textSecondary}
+          placeholderTextColor="#666"
         />
       </View>
 
@@ -143,7 +143,7 @@ export default function ProfileScreen() {
           placeholder="Tell us about yourself"
           multiline
           textAlignVertical="top"
-          placeholderTextColor={Colors.light.textSecondary}
+          placeholderTextColor="#666"
         />
       </View>
 
@@ -154,7 +154,7 @@ export default function ProfileScreen() {
           value={location}
           onChangeText={setLocation}
           placeholder="City, Country"
-          placeholderTextColor={Colors.light.textSecondary}
+          placeholderTextColor="#666"
         />
       </View>
 
@@ -165,7 +165,7 @@ export default function ProfileScreen() {
           value={skills}
           onChangeText={setSkills}
           placeholder="e.g. JavaScript, Design, Marketing"
-          placeholderTextColor={Colors.light.textSecondary}
+          placeholderTextColor="#666"
         />
       </View>
 
@@ -179,14 +179,14 @@ export default function ProfileScreen() {
         disabled={saving}
       >
         {saving ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={Colors.light.dark} />
         ) : (
           <Text style={styles.saveBtnText}>Save Profile</Text>
         )}
       </Pressable>
 
       <Pressable style={styles.logoutBtn} onPress={handleLogout}>
-        <Ionicons name="log-out-outline" size={20} color={Colors.light.danger} />
+        <Ionicons name="log-out-outline" size={20} color="#FF6B6B" />
         <Text style={styles.logoutText}>Sign Out</Text>
       </Pressable>
     </ScrollView>
@@ -196,7 +196,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: "#111111",
   },
   scrollContent: {
     padding: 16,
@@ -211,19 +211,19 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#E8F4FD",
+    backgroundColor: "#2A2A1A",
     alignItems: "center",
     justifyContent: "center",
   },
   email: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
-    color: Colors.light.textSecondary,
+    color: "#AAA",
   },
   sectionTitle: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 17,
-    color: Colors.light.text,
+    color: Colors.light.primary,
     marginTop: 4,
   },
   roleGrid: {
@@ -233,11 +233,11 @@ const styles = StyleSheet.create({
   },
   roleCard: {
     width: "47%",
-    backgroundColor: Colors.light.surface,
+    backgroundColor: "#1E1E1E",
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: "#333",
     gap: 8,
     position: "relative",
   },
@@ -251,12 +251,12 @@ const styles = StyleSheet.create({
   roleCardTitle: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 15,
-    color: Colors.light.text,
+    color: "#FFFFFF",
   },
   roleCardDesc: {
     fontFamily: "Inter_400Regular",
     fontSize: 12,
-    color: Colors.light.textSecondary,
+    color: "#AAA",
     lineHeight: 16,
   },
   checkBadge: {
@@ -275,18 +275,18 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontFamily: "Inter_500Medium",
     fontSize: 13,
-    color: Colors.light.textSecondary,
+    color: "#AAA",
   },
   fieldInput: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: "#1E1E1E",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: "#333",
     paddingHorizontal: 14,
     paddingVertical: 14,
     fontFamily: "Inter_400Regular",
     fontSize: 15,
-    color: Colors.light.text,
+    color: "#FFFFFF",
   },
   multilineInput: {
     minHeight: 80,
@@ -307,9 +307,9 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   saveBtnText: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Inter_700Bold",
     fontSize: 16,
-    color: "#fff",
+    color: Colors.light.dark,
   },
   logoutBtn: {
     flexDirection: "row",
@@ -321,6 +321,6 @@ const styles = StyleSheet.create({
   logoutText: {
     fontFamily: "Inter_500Medium",
     fontSize: 15,
-    color: Colors.light.danger,
+    color: "#FF6B6B",
   },
 });

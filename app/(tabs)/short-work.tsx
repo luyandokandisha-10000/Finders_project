@@ -5,7 +5,6 @@ import {
   FlatList,
   StyleSheet,
   Pressable,
-  ActivityIndicator,
   RefreshControl,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
@@ -20,7 +19,7 @@ function ShortWorkCard({ job }: { job: Job & { user?: User } }) {
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.iconCircle}>
-          <Ionicons name="flash" size={20} color="#EA580C" />
+          <Ionicons name="flash" size={20} color="#F59E0B" />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.cardTitle}>{job.title}</Text>
@@ -36,16 +35,16 @@ function ShortWorkCard({ job }: { job: Job & { user?: User } }) {
       <View style={styles.cardFooter}>
         {job.location ? (
           <View style={styles.tagRow}>
-            <Ionicons name="location-outline" size={14} color={Colors.light.textSecondary} />
+            <Ionicons name="location-outline" size={14} color="#888" />
             <Text style={styles.tagText}>{job.location}</Text>
           </View>
         ) : null}
         <View style={styles.tagRow}>
-          <Ionicons name="time-outline" size={14} color={Colors.light.textSecondary} />
+          <Ionicons name="time-outline" size={14} color="#888" />
           <Text style={styles.tagText}>{job.type || "Short-term"}</Text>
         </View>
       </View>
-      <View style={styles.cardActions}>
+      <View style={styles.cardPostedBy}>
         <Text style={styles.postedBy}>
           Posted by {job.user?.fullName || "Unknown"}
         </Text>
@@ -86,7 +85,7 @@ export default function ShortWorkScreen() {
         ListEmptyComponent={
           !isLoading ? (
             <View style={styles.emptyState}>
-              <Ionicons name="flash-outline" size={48} color={Colors.light.textSecondary} />
+              <Ionicons name="flash-outline" size={48} color="#555" />
               <Text style={styles.emptyTitle}>No short work gigs yet</Text>
               <Text style={styles.emptySubtitle}>Post freelance, contract, or temporary work opportunities</Text>
             </View>
@@ -100,7 +99,7 @@ export default function ShortWorkScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: "#111111",
   },
   listContent: {
     paddingBottom: 100,
@@ -113,14 +112,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.light.surface,
+    backgroundColor: "#1E1E1E",
     marginHorizontal: 16,
     marginVertical: 8,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 14,
     gap: 8,
     borderWidth: 1,
-    borderColor: Colors.light.primary + "30",
+    borderColor: Colors.light.primary + "40",
     borderStyle: "dashed",
   },
   addBtnText: {
@@ -129,16 +128,11 @@ const styles = StyleSheet.create({
     color: Colors.light.primary,
   },
   card: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: "#1E1E1E",
     marginHorizontal: 16,
     marginVertical: 6,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
     gap: 10,
   },
   cardHeader: {
@@ -150,22 +144,22 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: "#2A2A1A",
     alignItems: "center",
     justifyContent: "center",
   },
   cardTitle: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 16,
-    color: Colors.light.text,
+    color: "#FFFFFF",
   },
   cardCompany: {
     fontFamily: "Inter_400Regular",
     fontSize: 13,
-    color: Colors.light.textSecondary,
+    color: "#AAA",
   },
   salaryBadge: {
-    backgroundColor: "#ECFDF5",
+    backgroundColor: "#1A2A1A",
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
@@ -173,12 +167,12 @@ const styles = StyleSheet.create({
   salaryText: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 12,
-    color: "#059669",
+    color: "#10B981",
   },
   cardDesc: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
-    color: Colors.light.text,
+    color: "#CCC",
     lineHeight: 20,
   },
   cardFooter: {
@@ -193,17 +187,17 @@ const styles = StyleSheet.create({
   tagText: {
     fontFamily: "Inter_400Regular",
     fontSize: 12,
-    color: Colors.light.textSecondary,
+    color: "#888",
   },
-  cardActions: {
+  cardPostedBy: {
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
+    borderTopColor: "#333",
     paddingTop: 10,
   },
   postedBy: {
     fontFamily: "Inter_400Regular",
     fontSize: 12,
-    color: Colors.light.textSecondary,
+    color: "#888",
   },
   emptyState: {
     flex: 1,
@@ -215,12 +209,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 18,
-    color: Colors.light.text,
+    color: "#FFFFFF",
   },
   emptySubtitle: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
-    color: Colors.light.textSecondary,
+    color: "#888",
     textAlign: "center",
   },
 });

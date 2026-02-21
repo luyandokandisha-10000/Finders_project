@@ -5,7 +5,6 @@ import {
   FlatList,
   StyleSheet,
   Pressable,
-  ActivityIndicator,
   RefreshControl,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
@@ -31,17 +30,17 @@ function JobCard({ job }: { job: Job & { user?: User } }) {
       <View style={styles.cardMeta}>
         {job.location ? (
           <View style={styles.metaItem}>
-            <Ionicons name="location-outline" size={14} color={Colors.light.textSecondary} />
+            <Ionicons name="location-outline" size={14} color="#888" />
             <Text style={styles.metaText}>{job.location}</Text>
           </View>
         ) : null}
         <View style={styles.metaItem}>
-          <Ionicons name="time-outline" size={14} color={Colors.light.textSecondary} />
+          <Ionicons name="time-outline" size={14} color="#888" />
           <Text style={styles.metaText}>{job.type || "Full-time"}</Text>
         </View>
         {job.salary ? (
           <View style={styles.metaItem}>
-            <Ionicons name="cash-outline" size={14} color={Colors.light.textSecondary} />
+            <Ionicons name="cash-outline" size={14} color="#888" />
             <Text style={styles.metaText}>{job.salary}</Text>
           </View>
         ) : null}
@@ -91,7 +90,7 @@ export default function JobsScreen() {
         ListEmptyComponent={
           !isLoading ? (
             <View style={styles.emptyState}>
-              <Ionicons name="briefcase-outline" size={48} color={Colors.light.textSecondary} />
+              <Ionicons name="briefcase-outline" size={48} color="#555" />
               <Text style={styles.emptyTitle}>No job opportunities yet</Text>
               <Text style={styles.emptySubtitle}>Post full-time, part-time, or remote job listings</Text>
             </View>
@@ -105,7 +104,7 @@ export default function JobsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: "#111111",
   },
   listContent: {
     paddingBottom: 100,
@@ -118,14 +117,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.light.surface,
+    backgroundColor: "#1E1E1E",
     marginHorizontal: 16,
     marginVertical: 8,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 14,
     gap: 8,
     borderWidth: 1,
-    borderColor: Colors.light.primary + "30",
+    borderColor: Colors.light.primary + "40",
     borderStyle: "dashed",
   },
   addBtnText: {
@@ -134,16 +133,11 @@ const styles = StyleSheet.create({
     color: Colors.light.primary,
   },
   card: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: "#1E1E1E",
     marginHorizontal: 16,
     marginVertical: 6,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
     gap: 10,
   },
   cardHeader: {
@@ -155,24 +149,24 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: "#E8F4FD",
+    backgroundColor: "#2A2A1A",
     alignItems: "center",
     justifyContent: "center",
   },
   cardTitle: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 16,
-    color: Colors.light.text,
+    color: "#FFFFFF",
   },
   cardCompany: {
     fontFamily: "Inter_400Regular",
     fontSize: 13,
-    color: Colors.light.textSecondary,
+    color: "#AAA",
   },
   cardDesc: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
-    color: Colors.light.text,
+    color: "#CCC",
     lineHeight: 20,
   },
   cardMeta: {
@@ -188,20 +182,20 @@ const styles = StyleSheet.create({
   metaText: {
     fontFamily: "Inter_400Regular",
     fontSize: 12,
-    color: Colors.light.textSecondary,
+    color: "#888",
   },
   cardFooter: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
+    borderTopColor: "#333",
     paddingTop: 10,
   },
   postedBy: {
     fontFamily: "Inter_400Regular",
     fontSize: 12,
-    color: Colors.light.textSecondary,
+    color: "#888",
   },
   applyBtn: {
     flexDirection: "row",
@@ -223,12 +217,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 18,
-    color: Colors.light.text,
+    color: "#FFFFFF",
   },
   emptySubtitle: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
-    color: Colors.light.textSecondary,
+    color: "#888",
     textAlign: "center",
   },
 });

@@ -75,7 +75,7 @@ export default function CreateJobScreen() {
             value={title}
             onChangeText={setTitle}
             placeholder="e.g. Frontend Developer"
-            placeholderTextColor={Colors.light.textSecondary}
+            placeholderTextColor="#666"
           />
         </View>
 
@@ -86,7 +86,7 @@ export default function CreateJobScreen() {
             value={company}
             onChangeText={setCompany}
             placeholder="Company name"
-            placeholderTextColor={Colors.light.textSecondary}
+            placeholderTextColor="#666"
           />
         </View>
 
@@ -97,7 +97,7 @@ export default function CreateJobScreen() {
             value={location}
             onChangeText={setLocation}
             placeholder="City, Country or Remote"
-            placeholderTextColor={Colors.light.textSecondary}
+            placeholderTextColor="#666"
           />
         </View>
 
@@ -128,7 +128,7 @@ export default function CreateJobScreen() {
             value={salary}
             onChangeText={setSalary}
             placeholder="e.g. $50k - $80k"
-            placeholderTextColor={Colors.light.textSecondary}
+            placeholderTextColor="#666"
           />
         </View>
 
@@ -141,7 +141,7 @@ export default function CreateJobScreen() {
             placeholder="Describe the role, requirements, and what you're looking for..."
             multiline
             textAlignVertical="top"
-            placeholderTextColor={Colors.light.textSecondary}
+            placeholderTextColor="#666"
           />
         </View>
 
@@ -155,10 +155,10 @@ export default function CreateJobScreen() {
           disabled={!title.trim() || !company.trim() || !description.trim() || loading}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={Colors.light.dark} />
           ) : (
             <>
-              <Ionicons name="checkmark-circle" size={20} color="#fff" />
+              <Ionicons name="checkmark-circle" size={20} color={Colors.light.dark} />
               <Text style={styles.submitBtnText}>
                 {isShortWork ? "Post Gig" : "Post Job"}
               </Text>
@@ -173,7 +173,7 @@ export default function CreateJobScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: "#111111",
   },
   scrollContent: {
     padding: 16,
@@ -186,18 +186,18 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontFamily: "Inter_500Medium",
     fontSize: 13,
-    color: Colors.light.textSecondary,
+    color: "#AAA",
   },
   input: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: "#1E1E1E",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: "#333",
     paddingHorizontal: 14,
     paddingVertical: 14,
     fontFamily: "Inter_400Regular",
     fontSize: 15,
-    color: Colors.light.text,
+    color: "#FFFFFF",
   },
   multiline: {
     minHeight: 120,
@@ -212,18 +212,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: Colors.light.surface,
+    backgroundColor: "#1E1E1E",
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: "#333",
   },
   typeChipActive: {
-    backgroundColor: "#E8F4FD",
+    backgroundColor: "#2A2A1A",
     borderColor: Colors.light.primary,
   },
   typeChipText: {
     fontFamily: "Inter_500Medium",
     fontSize: 13,
-    color: Colors.light.textSecondary,
+    color: "#888",
   },
   typeChipTextActive: {
     color: Colors.light.primary,
@@ -246,8 +246,8 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitBtnText: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Inter_700Bold",
     fontSize: 16,
-    color: "#fff",
+    color: Colors.light.dark,
   },
 });

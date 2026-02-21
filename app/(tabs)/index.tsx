@@ -7,7 +7,6 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
-  Platform,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
@@ -35,15 +34,15 @@ function PostCard({ post }: { post: Post & { user?: User } }) {
       <Text style={styles.postContent}>{post.content}</Text>
       <View style={styles.postActions}>
         <Pressable style={styles.actionBtn}>
-          <Ionicons name="heart-outline" size={20} color={Colors.light.textSecondary} />
+          <Ionicons name="heart-outline" size={20} color="#888" />
           <Text style={styles.actionText}>{post.likes || 0}</Text>
         </Pressable>
         <Pressable style={styles.actionBtn}>
-          <Ionicons name="chatbubble-outline" size={18} color={Colors.light.textSecondary} />
+          <Ionicons name="chatbubble-outline" size={18} color="#888" />
           <Text style={styles.actionText}>Reply</Text>
         </Pressable>
         <Pressable style={styles.actionBtn}>
-          <Ionicons name="share-outline" size={18} color={Colors.light.textSecondary} />
+          <Ionicons name="share-outline" size={18} color="#888" />
           <Text style={styles.actionText}>Share</Text>
         </Pressable>
       </View>
@@ -68,7 +67,9 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.replace("/auth");
+      setTimeout(() => {
+        router.replace("/auth");
+      }, 100);
     }
   }, [user, authLoading]);
 
@@ -78,15 +79,13 @@ export default function HomeScreen() {
     enabled: !!user,
   });
 
-  if (authLoading) {
+  if (authLoading || !user) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={Colors.light.primary} />
       </View>
     );
   }
-
-  if (!user) return null;
 
   return (
     <View style={styles.container}>
@@ -105,14 +104,14 @@ export default function HomeScreen() {
         ListEmptyComponent={
           !isLoading ? (
             <View style={styles.emptyState}>
-              <Ionicons name="newspaper-outline" size={48} color={Colors.light.textSecondary} />
+              <Ionicons name="newspaper-outline" size={48} color="#555" />
               <Text style={styles.emptyTitle}>No posts yet</Text>
               <Text style={styles.emptySubtitle}>Be the first to share something with the community</Text>
               <Pressable
                 style={styles.emptyBtn}
                 onPress={() => router.push("/create-post")}
               >
-                <Ionicons name="add" size={20} color="#fff" />
+                <Ionicons name="add" size={20} color={Colors.light.dark} />
                 <Text style={styles.emptyBtnText}>Create Post</Text>
               </Pressable>
             </View>
@@ -126,13 +125,13 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: "#111111",
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: Colors.light.background,
+    backgroundColor: "#111111",
   },
   listContent: {
     paddingBottom: 100,
@@ -142,16 +141,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   postCard: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: "#1E1E1E",
     marginHorizontal: 16,
     marginVertical: 6,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
   },
   postHeader: {
     flexDirection: "row",
@@ -163,36 +157,36 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#E8F4FD",
+    backgroundColor: "#2A2A1A",
     alignItems: "center",
     justifyContent: "center",
   },
   postAuthor: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 15,
-    color: Colors.light.text,
+    color: "#FFFFFF",
   },
   postRole: {
     fontFamily: "Inter_400Regular",
     fontSize: 12,
-    color: Colors.light.textSecondary,
+    color: Colors.light.primary,
   },
   postTime: {
     fontFamily: "Inter_400Regular",
     fontSize: 12,
-    color: Colors.light.textSecondary,
+    color: "#888",
   },
   postContent: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
-    color: Colors.light.text,
+    color: "#E0E0E0",
     lineHeight: 21,
     marginBottom: 12,
   },
   postActions: {
     flexDirection: "row",
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
+    borderTopColor: "#333",
     paddingTop: 12,
     gap: 24,
   },
@@ -204,7 +198,7 @@ const styles = StyleSheet.create({
   actionText: {
     fontFamily: "Inter_400Regular",
     fontSize: 13,
-    color: Colors.light.textSecondary,
+    color: "#888",
   },
   emptyState: {
     flex: 1,
@@ -216,12 +210,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 18,
-    color: Colors.light.text,
+    color: "#FFFFFF",
   },
   emptySubtitle: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
-    color: Colors.light.textSecondary,
+    color: "#888",
     textAlign: "center",
   },
   emptyBtn: {
@@ -237,6 +231,6 @@ const styles = StyleSheet.create({
   emptyBtnText: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 14,
-    color: "#fff",
+    color: Colors.light.dark,
   },
 });

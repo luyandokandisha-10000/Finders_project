@@ -82,11 +82,11 @@ export default function AuthScreen() {
       >
         <View style={styles.headerSection}>
           <View style={styles.logoContainer}>
-            <Ionicons name="briefcase" size={40} color={Colors.light.primary} />
+            <Ionicons name="search" size={36} color={Colors.light.dark} />
           </View>
-          <Text style={styles.appName}>WorkHub</Text>
+          <Text style={styles.appName}>Finders</Text>
           <Text style={styles.tagline}>
-            Connect with opportunities that matter
+            Find your next opportunity. Get found.
           </Text>
         </View>
 
@@ -186,7 +186,7 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: Colors.light.dark,
   },
   scrollContent: {
     flexGrow: 1,
@@ -200,21 +200,21 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 20,
-    backgroundColor: "#E8F4FD",
+    backgroundColor: Colors.light.primary,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
   },
   appName: {
-    fontSize: 28,
+    fontSize: 32,
     fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
+    color: Colors.light.primary,
     marginBottom: 8,
   },
   tagline: {
     fontSize: 15,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
+    color: "#A0A0A0",
     textAlign: "center",
   },
   formSection: {
@@ -223,13 +223,13 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 22,
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.text,
+    color: "#FFFFFF",
     marginBottom: 6,
   },
   errorBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FEF2F2",
+    backgroundColor: "#3D1C1C",
     borderRadius: 10,
     padding: 12,
     gap: 8,
@@ -238,15 +238,15 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: "Inter_400Regular",
     fontSize: 13,
-    color: Colors.light.danger,
+    color: "#FF6B6B",
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.light.surface,
+    backgroundColor: "#2A2A2A",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: "#3A3A3A",
     paddingHorizontal: 14,
   },
   inputIcon: {
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     fontSize: 16,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.text,
+    color: "#FFFFFF",
   },
   eyeBtn: {
     padding: 6,
@@ -277,9 +277,9 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   submitBtnText: {
-    color: "#FFFFFF",
+    color: Colors.light.dark,
     fontSize: 16,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Inter_700Bold",
   },
   footerSection: {
     flexDirection: "row",
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   footerText: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
-    color: Colors.light.textSecondary,
+    color: "#A0A0A0",
   },
   footerLink: {
     fontFamily: "Inter_600SemiBold",

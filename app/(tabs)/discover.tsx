@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Pressable,
   ActivityIndicator,
-  Platform,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,13 +16,13 @@ import type { User } from "@shared/schema";
 
 const ROLE_COLORS: Record<string, string> = {
   Recruiter: "#8B5CF6",
-  "Job Seeker": "#2563EB",
-  Intern: "#059669",
-  Hustler: "#EA580C",
+  "Job Seeker": "#3B82F6",
+  Intern: "#10B981",
+  Hustler: "#F59E0B",
 };
 
 function UserCard({ user }: { user: User }) {
-  const roleColor = ROLE_COLORS[user.role || ""] || Colors.light.textSecondary;
+  const roleColor = ROLE_COLORS[user.role || ""] || "#888";
 
   return (
     <Pressable style={styles.userCard}>
@@ -33,7 +32,7 @@ function UserCard({ user }: { user: User }) {
       <View style={styles.userInfo}>
         <Text style={styles.userName}>{user.fullName || "User"}</Text>
         {user.role ? (
-          <View style={[styles.roleBadge, { backgroundColor: roleColor + "18" }]}>
+          <View style={[styles.roleBadge, { backgroundColor: roleColor + "20" }]}>
             <Text style={[styles.roleText, { color: roleColor }]}>{user.role}</Text>
           </View>
         ) : null}
@@ -42,12 +41,12 @@ function UserCard({ user }: { user: User }) {
         ) : null}
         {user.location ? (
           <View style={styles.locationRow}>
-            <Ionicons name="location-outline" size={14} color={Colors.light.textSecondary} />
+            <Ionicons name="location-outline" size={14} color="#888" />
             <Text style={styles.locationText}>{user.location}</Text>
           </View>
         ) : null}
       </View>
-      <Ionicons name="chevron-forward" size={18} color={Colors.light.textSecondary} />
+      <Ionicons name="chevron-forward" size={18} color="#555" />
     </Pressable>
   );
 }
@@ -76,17 +75,17 @@ export default function DiscoverScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={18} color={Colors.light.textSecondary} />
+        <Ionicons name="search" size={18} color="#888" />
         <TextInput
           style={styles.searchInput}
           placeholder="Search people, roles, skills..."
           value={search}
           onChangeText={setSearch}
-          placeholderTextColor={Colors.light.textSecondary}
+          placeholderTextColor="#888"
         />
         {search ? (
           <Pressable onPress={() => setSearch("")}>
-            <Ionicons name="close-circle" size={18} color={Colors.light.textSecondary} />
+            <Ionicons name="close-circle" size={18} color="#888" />
           </Pressable>
         ) : null}
       </View>
@@ -107,7 +106,7 @@ export default function DiscoverScreen() {
           scrollEnabled={!!filtered.length}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Ionicons name="people-outline" size={48} color={Colors.light.textSecondary} />
+              <Ionicons name="people-outline" size={48} color="#555" />
               <Text style={styles.emptyTitle}>
                 {search ? "No results found" : "No users yet"}
               </Text>
@@ -125,7 +124,7 @@ export default function DiscoverScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: "#111111",
   },
   center: {
     flex: 1,
@@ -135,14 +134,14 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.light.surface,
+    backgroundColor: "#1E1E1E",
     marginHorizontal: 16,
     marginTop: 12,
     marginBottom: 8,
     borderRadius: 12,
     paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: "#333",
     gap: 8,
   },
   searchInput: {
@@ -150,7 +149,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontFamily: "Inter_400Regular",
     fontSize: 15,
-    color: Colors.light.text,
+    color: "#FFFFFF",
   },
   listContent: {
     paddingBottom: 100,
@@ -161,23 +160,18 @@ const styles = StyleSheet.create({
   userCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.light.surface,
+    backgroundColor: "#1E1E1E",
     marginHorizontal: 16,
     marginVertical: 4,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 14,
     gap: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
   },
   userAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#E8F4FD",
+    backgroundColor: "#2A2A1A",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -188,7 +182,7 @@ const styles = StyleSheet.create({
   userName: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 15,
-    color: Colors.light.text,
+    color: "#FFFFFF",
   },
   roleBadge: {
     alignSelf: "flex-start",
@@ -203,7 +197,7 @@ const styles = StyleSheet.create({
   userBio: {
     fontFamily: "Inter_400Regular",
     fontSize: 13,
-    color: Colors.light.textSecondary,
+    color: "#AAA",
     lineHeight: 18,
   },
   locationRow: {
@@ -214,7 +208,7 @@ const styles = StyleSheet.create({
   locationText: {
     fontFamily: "Inter_400Regular",
     fontSize: 12,
-    color: Colors.light.textSecondary,
+    color: "#888",
   },
   emptyState: {
     flex: 1,
@@ -226,12 +220,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 18,
-    color: Colors.light.text,
+    color: "#FFFFFF",
   },
   emptySubtitle: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
-    color: Colors.light.textSecondary,
+    color: "#888",
     textAlign: "center",
   },
 });

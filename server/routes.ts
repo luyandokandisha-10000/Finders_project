@@ -1,8 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
-import session from "express-session";
-import connectPgSimple from "connect-pg-simple";
-import { pool } from "./db";
+import { randomBytes } from "crypto";
 import { registerSchema, loginSchema } from "@shared/schema";
 import {
   createUser,
@@ -16,34 +14,69 @@ import {
   getJobs,
   getAllUsers,
 } from "./storage";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { pgTable, text, varchar, timestamp } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
-const PgSession = connectPgSimple(session);
+const tokens = pgTable("auth_tokens", {
+  token: varchar("token").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
-function requireAuth(req: Request, res: Response, next: Function) {
-  if (!req.session?.userId) {
+async function ensureTokenTable() {
+  try {
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS auth_tokens (
+      token VARCHAR PRIMARY KEY,
+      user_id VARCHAR NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    )`);
+  } catch (e) {
+    console.error("Token table creation error:", e);
+  }
+}
+
+function generateToken(): string {
+  return randomBytes(32).toString("hex");
+}
+
+async function saveToken(token: string, userId: string) {
+  await db.insert(tokens).values({ token, userId });
+}
+
+async function getUserIdFromToken(token: string): Promise<string | null> {
+  const [row] = await db.select().from(tokens).where(eq(tokens.token, token));
+  return row?.userId || null;
+}
+
+async function deleteToken(token: string) {
+  await db.delete(tokens).where(eq(tokens.token, token));
+}
+
+function extractToken(req: Request): string | null {
+  const auth = req.headers.authorization;
+  if (auth?.startsWith("Bearer ")) {
+    return auth.slice(7);
+  }
+  return null;
+}
+
+async function requireAuth(req: Request, res: Response, next: Function) {
+  const token = extractToken(req);
+  if (!token) {
     return res.status(401).json({ message: "Not authenticated" });
   }
+  const userId = await getUserIdFromToken(token);
+  if (!userId) {
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
+  (req as any).userId = userId;
   next();
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  app.use(
-    session({
-      store: new PgSession({
-        pool: pool as any,
-        createTableIfMissing: true,
-      }),
-      secret: process.env.SESSION_SECRET || "workhub-secret-key-dev",
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-        sameSite: "none",
-        secure: true,
-      },
-    })
-  );
+  await ensureTokenTable();
 
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
@@ -58,8 +91,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await createUser(parsed.data.email, parsed.data.password, parsed.data.fullName);
-      (req.session as any).userId = user.id;
-      res.json({ ...user, password: undefined });
+      const token = generateToken();
+      await saveToken(token, user.id);
+      res.json({ user: { ...user, password: undefined }, token });
     } catch (error: any) {
       console.error("Register error:", error);
       res.status(500).json({ message: "Registration failed" });
@@ -78,8 +112,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid email or password." });
       }
 
-      (req.session as any).userId = user.id;
-      res.json({ ...user, password: undefined });
+      const token = generateToken();
+      await saveToken(token, user.id);
+      res.json({ user: { ...user, password: undefined }, token });
     } catch (error: any) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Login failed" });
@@ -87,9 +122,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/auth/me", async (req: Request, res: Response) => {
-    const userId = (req.session as any)?.userId;
-    if (!userId) {
+    const token = extractToken(req);
+    if (!token) {
       return res.status(401).json({ message: "Not authenticated" });
+    }
+    const userId = await getUserIdFromToken(token);
+    if (!userId) {
+      return res.status(401).json({ message: "Invalid or expired token" });
     }
     const user = await getUserById(userId);
     if (!user) {
@@ -98,17 +137,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ ...user, password: undefined });
   });
 
-  app.post("/api/auth/logout", (req: Request, res: Response) => {
-    req.session.destroy((err) => {
-      if (err) {
-        return res.status(500).json({ message: "Logout failed" });
-      }
-      res.json({ message: "Logged out" });
-    });
+  app.post("/api/auth/logout", async (req: Request, res: Response) => {
+    const token = extractToken(req);
+    if (token) {
+      await deleteToken(token);
+    }
+    res.json({ message: "Logged out" });
   });
 
   app.put("/api/profile", requireAuth as any, async (req: Request, res: Response) => {
-    const userId = (req.session as any).userId;
+    const userId = (req as any).userId;
     const user = await updateUser(userId, req.body);
     res.json({ ...user, password: undefined });
   });
@@ -125,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/posts", requireAuth as any, async (req: Request, res: Response) => {
-    const userId = (req.session as any).userId;
+    const userId = (req as any).userId;
     const { content, type } = req.body;
     if (!content) return res.status(400).json({ message: "Content required" });
     const post = await createPost(userId, content, type || "general");
@@ -139,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/jobs", requireAuth as any, async (req: Request, res: Response) => {
-    const userId = (req.session as any).userId;
+    const userId = (req as any).userId;
     const { title, company, location, description, type, salary, isShortWork } = req.body;
     if (!title || !company || !description) {
       return res.status(400).json({ message: "Title, company, and description required" });

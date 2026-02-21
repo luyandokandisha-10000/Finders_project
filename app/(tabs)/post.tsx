@@ -84,7 +84,7 @@ export default function PostScreen() {
               <Ionicons
                 name={t.icon}
                 size={16}
-                color={type === t.key ? Colors.light.primary : Colors.light.textSecondary}
+                color={type === t.key ? Colors.light.primary : "#888"}
               />
               <Text
                 style={[
@@ -106,7 +106,7 @@ export default function PostScreen() {
             onChangeText={setContent}
             multiline
             textAlignVertical="top"
-            placeholderTextColor={Colors.light.textSecondary}
+            placeholderTextColor="#888"
           />
         </View>
 
@@ -120,10 +120,10 @@ export default function PostScreen() {
           disabled={!content.trim() || loading}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={Colors.light.dark} />
           ) : (
             <>
-              <Ionicons name="send" size={18} color="#fff" />
+              <Ionicons name="send" size={18} color={Colors.light.dark} />
               <Text style={styles.postBtnText}>Publish</Text>
             </>
           )}
@@ -136,7 +136,7 @@ export default function PostScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: "#111111",
   },
   scrollContent: {
     padding: 16,
@@ -151,24 +151,24 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#E8F4FD",
+    backgroundColor: "#2A2A1A",
     alignItems: "center",
     justifyContent: "center",
   },
   userName: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 16,
-    color: Colors.light.text,
+    color: "#FFFFFF",
   },
   userRole: {
     fontFamily: "Inter_400Regular",
     fontSize: 13,
-    color: Colors.light.textSecondary,
+    color: "#888",
   },
   sectionLabel: {
     fontFamily: "Inter_500Medium",
     fontSize: 13,
-    color: Colors.light.textSecondary,
+    color: "#888",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
@@ -183,35 +183,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: Colors.light.surface,
+    backgroundColor: "#1E1E1E",
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: "#333",
     gap: 5,
   },
   typeChipActive: {
-    backgroundColor: "#E8F4FD",
+    backgroundColor: "#2A2A1A",
     borderColor: Colors.light.primary,
   },
   typeChipText: {
     fontFamily: "Inter_500Medium",
     fontSize: 13,
-    color: Colors.light.textSecondary,
+    color: "#888",
   },
   typeChipTextActive: {
     color: Colors.light.primary,
   },
   inputContainer: {
-    backgroundColor: Colors.light.surface,
-    borderRadius: 12,
+    backgroundColor: "#1E1E1E",
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: "#333",
     minHeight: 160,
   },
   contentInput: {
     padding: 16,
     fontFamily: "Inter_400Regular",
     fontSize: 15,
-    color: Colors.light.text,
+    color: "#FFFFFF",
     minHeight: 160,
     lineHeight: 22,
   },
@@ -232,8 +232,8 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   postBtnText: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Inter_700Bold",
     fontSize: 16,
-    color: "#fff",
+    color: Colors.light.dark,
   },
 });

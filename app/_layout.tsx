@@ -27,13 +27,22 @@ function RootLayoutNav() {
     }
   }, [user, isLoading]);
 
+  const headerTheme = {
+    headerStyle: { backgroundColor: "#1A1A1A" },
+    headerTintColor: "#D4A017",
+    headerTitleStyle: { fontFamily: "Inter_600SemiBold", color: "#FFFFFF" },
+    headerBackTitle: "Back",
+  };
+
   return (
-    <Stack screenOptions={{ headerBackTitle: "Back" }}>
+    <Stack screenOptions={headerTheme}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="auth" options={{ headerShown: false }} />
-      <Stack.Screen name="profile" options={{ title: "Profile", headerBackTitle: "Back" }} />
-      <Stack.Screen name="create-post" options={{ title: "Create Post", presentation: "modal" }} />
-      <Stack.Screen name="create-job" options={{ title: "Post Job", presentation: "modal" }} />
+      <Stack.Screen name="profile" options={{ title: "Profile" }} />
+      <Stack.Screen name="create-post" options={{ title: "New Post", presentation: "modal", ...headerTheme }} />
+      <Stack.Screen name="create-job" options={{ title: "Post Opportunity", presentation: "modal", ...headerTheme }} />
+      <Stack.Screen name="user/[id]" options={{ title: "Profile" }} />
+      <Stack.Screen name="conversation/[id]" options={{ title: "Chat" }} />
     </Stack>
   );
 }

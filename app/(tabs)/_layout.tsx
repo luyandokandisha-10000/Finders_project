@@ -8,14 +8,14 @@ import React from "react";
 import Colors from "@/constants/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-function ProfileButton() {
+function ComposeButton() {
   return (
     <Pressable
-      onPress={() => router.push("/profile")}
+      onPress={() => router.push("/create-post")}
       style={{ marginRight: 16 }}
       hitSlop={8}
     >
-      <Ionicons name="person-circle-outline" size={28} color={Colors.light.primary} />
+      <Ionicons name="create-outline" size={26} color={Colors.light.primary} />
     </Pressable>
   );
 }
@@ -31,25 +31,23 @@ function NativeTabLayout() {
         <Icon sf={{ default: "magnifyingglass", selected: "magnifyingglass" }} />
         <Label>Discover</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="post">
-        <Icon sf={{ default: "plus.circle", selected: "plus.circle.fill" }} />
-        <Label>Post</Label>
+      <NativeTabs.Trigger name="messages">
+        <Icon sf={{ default: "message", selected: "message.fill" }} />
+        <Label>Messages</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="short-work">
-        <Icon sf={{ default: "bolt", selected: "bolt.fill" }} />
-        <Label>Short Work</Label>
+      <NativeTabs.Trigger name="notifications">
+        <Icon sf={{ default: "bell", selected: "bell.fill" }} />
+        <Label>Alerts</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="jobs">
-        <Icon sf={{ default: "briefcase", selected: "briefcase.fill" }} />
-        <Label>Jobs</Label>
+      <NativeTabs.Trigger name="profile">
+        <Icon sf={{ default: "person", selected: "person.fill" }} />
+        <Label>Profile</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
 }
 
 function ClassicTabLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
   const isWeb = Platform.OS === "web";
   const isIOS = Platform.OS === "ios";
   const insets = useSafeAreaInsets();
@@ -60,7 +58,6 @@ function ClassicTabLayout() {
         tabBarActiveTintColor: Colors.light.primary,
         tabBarInactiveTintColor: "#888888",
         headerShown: true,
-        headerRight: () => <ProfileButton />,
         headerStyle: {
           backgroundColor: Colors.light.dark,
           ...(isWeb ? { height: 67 + 44 } : {}),
@@ -98,7 +95,8 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: "Finders",
+          headerRight: () => <ComposeButton />,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "home" : "home-outline"} size={22} color={color} />
           ),
@@ -114,29 +112,29 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="post"
+        name="messages"
         options={{
-          title: "Post",
+          title: "Messages",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "add-circle" : "add-circle-outline"} size={24} color={color} />
+            <Ionicons name={focused ? "chatbubbles" : "chatbubbles-outline"} size={22} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="short-work"
+        name="notifications"
         options={{
-          title: "Short Work",
+          title: "Notifications",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "flash" : "flash-outline"} size={22} color={color} />
+            <Ionicons name={focused ? "notifications" : "notifications-outline"} size={22} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="jobs"
+        name="profile"
         options={{
-          title: "Jobs",
+          title: "My Profile",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "briefcase" : "briefcase-outline"} size={22} color={color} />
+            <Ionicons name={focused ? "person" : "person-outline"} size={22} color={color} />
           ),
         }}
       />

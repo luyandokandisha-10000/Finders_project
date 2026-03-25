@@ -30,7 +30,8 @@ Preferred communication style: Simple, everyday language.
   - `GET /api/users` — user discovery
 - **Authentication**: Custom token-based auth. Tokens are random 64-character hex strings stored in a `auth_tokens` PostgreSQL table. No JWT library is used — tokens are opaque and looked up server-side
 - **Password Hashing**: SHA-256 with random salt (stored as `salt:hash` in the database). Note: this is a simple implementation, not bcrypt/argon2
-- **CORS**: Dynamic origin allowlist based on Replit environment variables, plus localhost origins for development
+- **CORS**: Dynamic origin allowlist based on Replit environment variables, plus localhost origins for development. Allows `Content-Type` and `Authorization` headers
+- **Auth Routing Guard**: Auth navigation is handled in `RootLayoutNav` (`app/_layout.tsx`) using `useAuth()` + `useSegments()` + `useEffect`. When the user is unauthenticated and not on `/auth`, it redirects to `/auth`. When authenticated and on `/auth`, it redirects to `/(tabs)`. This avoids race conditions with `<Redirect>` components inside tab layouts
 
 ### Database (PostgreSQL + Drizzle ORM)
 

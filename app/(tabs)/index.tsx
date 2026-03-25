@@ -1,11 +1,10 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   View,
   Text,
   FlatList,
   StyleSheet,
   Pressable,
-  ActivityIndicator,
   RefreshControl,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
@@ -63,29 +62,13 @@ function getTimeAgo(date: Date): string {
 }
 
 export default function HomeScreen() {
-  const { user, isLoading: authLoading } = useAuth();
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      setTimeout(() => {
-        router.replace("/auth");
-      }, 100);
-    }
-  }, [user, authLoading]);
+  const { user } = useAuth();
 
   const { data: posts, isLoading, refetch } = useQuery<(Post & { user?: User })[]>({
     queryKey: ["/api/posts"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!user,
   });
-
-  if (authLoading || !user) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={Colors.light.primary} />
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -125,12 +108,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#111111",
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
     backgroundColor: "#111111",
   },
   listContent: {

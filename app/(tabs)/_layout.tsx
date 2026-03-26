@@ -1,8 +1,6 @@
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs, router } from "expo-router";
-import { NativeTabs, Icon, Label } from "expo-router/unstable-native-tabs";
 import { BlurView } from "expo-blur";
-import { Platform, StyleSheet, View, Pressable, useColorScheme } from "react-native";
+import { Platform, StyleSheet, View, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import Colors from "@/constants/colors";
@@ -20,63 +18,36 @@ function ComposeButton() {
   );
 }
 
-function NativeTabLayout() {
-  return (
-    <NativeTabs>
-      <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Home</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="discover">
-        <Icon sf={{ default: "magnifyingglass", selected: "magnifyingglass" }} />
-        <Label>Discover</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="messages">
-        <Icon sf={{ default: "message", selected: "message.fill" }} />
-        <Label>Messages</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="notifications">
-        <Icon sf={{ default: "bell", selected: "bell.fill" }} />
-        <Label>Alerts</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="profile">
-        <Icon sf={{ default: "person", selected: "person.fill" }} />
-        <Label>Profile</Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
-  );
-}
-
-function ClassicTabLayout() {
-  const isWeb = Platform.OS === "web";
+export default function TabLayout() {
   const isIOS = Platform.OS === "ios";
-  const insets = useSafeAreaInsets();
+  const isWeb = Platform.OS === "web";
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors.light.primary,
-        tabBarInactiveTintColor: "#888888",
+        tabBarInactiveTintColor: "#666666",
         headerShown: true,
         headerStyle: {
-          backgroundColor: Colors.light.dark,
+          backgroundColor: "#1A1A1A",
           ...(isWeb ? { height: 67 + 44 } : {}),
         },
         headerTintColor: Colors.light.primary,
         headerTitleStyle: {
           fontFamily: "Inter_600SemiBold",
           fontSize: 18,
-          color: Colors.light.primary,
+          color: "#FFFFFF",
         },
         tabBarLabelStyle: {
           fontFamily: "Inter_500Medium",
           fontSize: 11,
+          marginBottom: 2,
         },
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "transparent" : Colors.light.dark,
-          borderTopWidth: isWeb ? 1 : 0,
-          borderTopColor: "#333333",
+          backgroundColor: isIOS ? "transparent" : "#1A1A1A",
+          borderTopWidth: 1,
+          borderTopColor: "#2A2A2A",
           elevation: 0,
           ...(isWeb ? { height: 84 } : {}),
         },
@@ -87,9 +58,11 @@ function ClassicTabLayout() {
               tint="dark"
               style={StyleSheet.absoluteFill}
             />
-          ) : isWeb ? (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.light.dark }]} />
-          ) : null,
+          ) : (
+            <View
+              style={[StyleSheet.absoluteFill, { backgroundColor: "#1A1A1A" }]}
+            />
+          ),
       }}
     >
       <Tabs.Screen
@@ -97,8 +70,13 @@ function ClassicTabLayout() {
         options={{
           title: "Finders",
           headerRight: () => <ComposeButton />,
+          tabBarLabel: "Home",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "home" : "home-outline"} size={22} color={color} />
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -106,8 +84,13 @@ function ClassicTabLayout() {
         name="discover"
         options={{
           title: "Discover",
+          tabBarLabel: "Discover",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "search" : "search-outline"} size={22} color={color} />
+            <Ionicons
+              name={focused ? "search" : "search-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -115,8 +98,13 @@ function ClassicTabLayout() {
         name="messages"
         options={{
           title: "Messages",
+          tabBarLabel: "Messages",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "chatbubbles" : "chatbubbles-outline"} size={22} color={color} />
+            <Ionicons
+              name={focused ? "chatbubbles" : "chatbubbles-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -124,8 +112,13 @@ function ClassicTabLayout() {
         name="notifications"
         options={{
           title: "Notifications",
+          tabBarLabel: "Alerts",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "notifications" : "notifications-outline"} size={22} color={color} />
+            <Ionicons
+              name={focused ? "notifications" : "notifications-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -133,18 +126,19 @@ function ClassicTabLayout() {
         name="profile"
         options={{
           title: "My Profile",
+          tabBarLabel: "Profile",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "person" : "person-outline"} size={22} color={color} />
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
+      <Tabs.Screen name="post" options={{ href: null }} />
+      <Tabs.Screen name="short-work" options={{ href: null }} />
+      <Tabs.Screen name="jobs" options={{ href: null }} />
     </Tabs>
   );
-}
-
-export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
-  }
-  return <ClassicTabLayout />;
 }

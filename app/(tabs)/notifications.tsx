@@ -61,7 +61,7 @@ function NotifCard({ notif }: { notif: NotifWithActor }) {
 
   const handlePress = () => {
     if (notif.type === "message") {
-      router.push("/messages" as any);
+      router.push("/(tabs)/messages");
     } else if (notif.postId) {
       router.push("/");
     } else if (notif.actorId) {

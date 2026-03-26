@@ -108,7 +108,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (existing) {
         return res.status(409).json({ message: "An account with this email already exists." });
       }
-      const user = await createUser(parsed.data.email, parsed.data.password, parsed.data.fullName);
+      const role = (req.body.role as string) || "";
+      const user = await createUser(parsed.data.email, parsed.data.password, parsed.data.fullName, role);
       const token = generateToken();
       await saveToken(token, user.id);
       res.json({ user: { ...user, password: undefined }, token });

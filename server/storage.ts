@@ -28,12 +28,13 @@ function safeUser(user: User) {
   return { ...user, password: "" };
 }
 
-export async function createUser(email: string, password: string, fullName?: string): Promise<User> {
+export async function createUser(email: string, password: string, fullName?: string, role?: string): Promise<User> {
   const { hash } = hashWithSalt(password);
   const [user] = await db.insert(users).values({
     email,
     password: hash,
     fullName: fullName || "",
+    role: role || "",
   }).returning();
   return user;
 }

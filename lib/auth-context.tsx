@@ -7,7 +7,7 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName?: string) => Promise<void>;
+  register: (email: string, password: string, fullName?: string, role?: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
   refetchUser: () => void;
@@ -43,13 +43,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryClient.setQueryData(["/api/auth/me"], data.user);
   };
 
-  const register = async (email: string, password: string, fullName?: string) => {
+  const register = async (email: string, password: string, fullName?: string, role?: string) => {
     const baseUrl = getApiUrl();
     const url = new URL("/api/auth/register", baseUrl);
     const res = await fetch(url.toString(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, fullName }),
+      body: JSON.stringify({ email, password, fullName, role }),
     });
 
     if (!res.ok) {

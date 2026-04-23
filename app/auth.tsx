@@ -248,11 +248,15 @@ export default function AuthScreen() {
                 autoCapitalize="none"
                 placeholderTextColor="#555"
               />
-              <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+              <Pressable
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeBtn}
+                hitSlop={10}
+              >
                 <Ionicons
                   name={showPassword ? "eye-off-outline" : "eye-outline"}
                   size={20}
-                  color="#888"
+                  color={Colors.light.primary}
                 />
               </Pressable>
             </View>
@@ -321,7 +325,11 @@ const styles = StyleSheet.create({
     flex: 1, paddingVertical: 15,
     fontFamily: "Inter_400Regular", fontSize: 16, color: "#FFFFFF",
   },
-  eyeBtn: { padding: 6 },
+  eyeBtn: {
+    padding: 8,
+    marginRight: -4,
+    borderRadius: 8,
+  },
   submitBtn: {
     backgroundColor: Colors.light.primary, borderRadius: 12,
     paddingVertical: 16, alignItems: "center", marginTop: 4,

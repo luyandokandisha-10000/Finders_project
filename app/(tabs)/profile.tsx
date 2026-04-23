@@ -115,7 +115,6 @@ export default function ProfileTab() {
             )}
           </View>
         </Pressable>
-        <Text style={styles.emailText}>{user?.email}</Text>
         <Text style={styles.tapHint}>Tap photo to change</Text>
       </View>
 

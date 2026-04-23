@@ -204,12 +204,6 @@ export default function UserProfileScreen() {
               <Text style={styles.detailText}>{(profileUser as any).phone}</Text>
             </View>
           ) : null}
-          {profileUser.email ? (
-            <View style={styles.detailItem}>
-              <Ionicons name="mail-outline" size={16} color={Colors.light.primary} />
-              <Text style={styles.detailText}>{profileUser.email}</Text>
-            </View>
-          ) : null}
           {profileUser.location ? (
             <View style={styles.detailItem}>
               <Ionicons name="location-outline" size={16} color={Colors.light.primary} />

@@ -51,8 +51,8 @@ export default function CreateJobScreen() {
         isShortWork,
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/jobs?shortWork=${shortWork}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs?shortWork=true"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs?shortWork=false"] });
       router.back();
     } catch (err) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

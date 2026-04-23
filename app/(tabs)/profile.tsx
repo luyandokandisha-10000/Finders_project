@@ -72,7 +72,7 @@ export default function ProfileTab() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateProfile({ fullName, role, bio, location, skills, phone } as any);
+      await updateProfile({ fullName, bio, location, skills, phone } as any);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert("Saved", "Your profile has been updated.");
     } catch {
@@ -120,29 +120,32 @@ export default function ProfileTab() {
       </View>
 
       <Text style={styles.sectionTitle}>Your Role</Text>
-      <View style={styles.roleGrid}>
-        {ROLES.map((r) => (
-          <Pressable
-            key={r.key}
-            style={[styles.roleCard, role === r.key && { borderColor: r.color, borderWidth: 2 }]}
-            onPress={() => {
-              setRole(r.key);
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            }}
-          >
-            <View style={[styles.roleIconCircle, { backgroundColor: r.bg }]}>
+      {(() => {
+        const r = ROLES.find((x) => x.key === role) || null;
+        if (!r) {
+          return (
+            <View style={styles.roleBadgeEmpty}>
+              <Ionicons name="information-circle-outline" size={18} color="#888" />
+              <Text style={styles.roleBadgeEmptyText}>No role set on this account.</Text>
+            </View>
+          );
+        }
+        return (
+          <View style={[styles.roleBadge, { borderColor: r.color, backgroundColor: r.bg }]}>
+            <View style={[styles.roleIconCircle, { backgroundColor: "#00000040" }]}>
               <Ionicons name={r.icon} size={22} color={r.color} />
             </View>
-            <Text style={styles.roleCardTitle}>{r.key}</Text>
-            <Text style={styles.roleCardDesc}>{r.desc}</Text>
-            {role === r.key && (
-              <View style={[styles.checkBadge, { backgroundColor: r.color }]}>
-                <Ionicons name="checkmark" size={12} color="#fff" />
-              </View>
-            )}
-          </Pressable>
-        ))}
-      </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.roleBadgeTitle, { color: r.color }]}>{r.key}</Text>
+              <Text style={styles.roleBadgeDesc}>{r.desc}</Text>
+            </View>
+            <View style={styles.lockChip}>
+              <Ionicons name="lock-closed" size={12} color="#888" />
+              <Text style={styles.lockChipText}>Permanent</Text>
+            </View>
+          </View>
+        );
+      })()}
 
       <Text style={styles.sectionTitle}>Your Information</Text>
 
@@ -229,19 +232,26 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold", fontSize: 16,
     color: Colors.light.primary, marginTop: 4,
   },
-  roleGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  roleCard: {
-    width: "47%", backgroundColor: "#1E1E1E", borderRadius: 14,
-    padding: 14, borderWidth: 1, borderColor: "#333", gap: 6, position: "relative",
-  },
   roleIconCircle: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  roleCardTitle: { fontFamily: "Inter_600SemiBold", fontSize: 14, color: "#FFFFFF" },
-  roleCardDesc: { fontFamily: "Inter_400Regular", fontSize: 11, color: "#AAA", lineHeight: 15 },
-  checkBadge: {
-    position: "absolute", top: 10, right: 10,
-    width: 22, height: 22, borderRadius: 11,
-    alignItems: "center", justifyContent: "center",
+  roleBadge: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    backgroundColor: "#1E1E1E", borderRadius: 14,
+    padding: 14, borderWidth: 2, borderColor: "#333",
   },
+  roleBadgeTitle: { fontFamily: "Inter_700Bold", fontSize: 16 },
+  roleBadgeDesc: { fontFamily: "Inter_400Regular", fontSize: 12, color: "#AAA", marginTop: 2 },
+  roleBadgeEmpty: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    backgroundColor: "#1E1E1E", borderRadius: 12,
+    padding: 14, borderWidth: 1, borderColor: "#333",
+  },
+  roleBadgeEmptyText: { fontFamily: "Inter_400Regular", fontSize: 13, color: "#888" },
+  lockChip: {
+    flexDirection: "row", alignItems: "center", gap: 4,
+    backgroundColor: "#00000060", paddingHorizontal: 8, paddingVertical: 4,
+    borderRadius: 8,
+  },
+  lockChipText: { fontFamily: "Inter_500Medium", fontSize: 11, color: "#888" },
   fieldGroup: { gap: 5 },
   fieldLabel: { fontFamily: "Inter_500Medium", fontSize: 13, color: "#888" },
   fieldRow: {

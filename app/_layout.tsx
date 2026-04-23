@@ -43,6 +43,7 @@ function RootLayoutNav() {
       <Stack.Screen name="create-job" options={{ title: "Post Opportunity", presentation: "modal", ...headerTheme }} />
       <Stack.Screen name="user/[id]" options={{ title: "Profile" }} />
       <Stack.Screen name="conversation/[id]" options={{ title: "Chat" }} />
+      <Stack.Screen name="menu" options={{ title: "Menu", presentation: "modal", ...headerTheme }} />
     </Stack>
   );
 }

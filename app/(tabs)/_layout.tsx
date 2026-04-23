@@ -4,15 +4,32 @@ import { Platform, StyleSheet, View, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import Colors from "@/constants/colors";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-function ComposeButton() {
+function HeaderRight({ children }: { children?: React.ReactNode }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 14, marginRight: 14 }}>
+      {children}
+      <Pressable onPress={() => router.push("/menu" as any)} hitSlop={8}>
+        <Ionicons name="menu" size={26} color={Colors.light.primary} />
+      </Pressable>
+    </View>
+  );
+}
+
+function PostJobBtn({ shortWork }: { shortWork: boolean }) {
   return (
     <Pressable
-      onPress={() => router.push("/create-post")}
-      style={{ marginRight: 16 }}
+      onPress={() => router.push(`/create-job?shortWork=${shortWork}` as any)}
       hitSlop={8}
     >
+      <Ionicons name="add-circle" size={28} color={Colors.light.primary} />
+    </Pressable>
+  );
+}
+
+function HomeComposeBtn() {
+  return (
+    <Pressable onPress={() => router.push("/create-post")} hitSlop={8}>
       <Ionicons name="create-outline" size={26} color={Colors.light.primary} />
     </Pressable>
   );
@@ -53,15 +70,9 @@ export default function TabLayout() {
         },
         tabBarBackground: () =>
           isIOS ? (
-            <BlurView
-              intensity={100}
-              tint="dark"
-              style={StyleSheet.absoluteFill}
-            />
+            <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />
           ) : (
-            <View
-              style={[StyleSheet.absoluteFill, { backgroundColor: "#1A1A1A" }]}
-            />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: "#1A1A1A" }]} />
           ),
       }}
     >
@@ -69,14 +80,47 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Finders",
-          headerRight: () => <ComposeButton />,
+          headerRight: () => <HeaderRight><HomeComposeBtn /></HeaderRight>,
           tabBarLabel: "Home",
           tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "home" : "home-outline"} size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="jobs"
+        options={{
+          title: "Jobs",
+          headerRight: () => <HeaderRight><PostJobBtn shortWork={false} /></HeaderRight>,
+          tabBarLabel: "Jobs",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "briefcase" : "briefcase-outline"} size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="post"
+        options={{
+          title: "New Post",
+          headerRight: () => <HeaderRight />,
+          tabBarLabel: "Post",
+          tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? "home" : "home-outline"}
-              size={22}
-              color={color}
+              name={focused ? "add-circle" : "add-circle-outline"}
+              size={32}
+              color={Colors.light.primary}
             />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="short-work"
+        options={{
+          title: "Short Work",
+          headerRight: () => <HeaderRight><PostJobBtn shortWork={true} /></HeaderRight>,
+          tabBarLabel: "Short Work",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "flash" : "flash-outline"} size={22} color={color} />
           ),
         }}
       />
@@ -84,61 +128,16 @@ export default function TabLayout() {
         name="discover"
         options={{
           title: "Discover",
+          headerRight: () => <HeaderRight />,
           tabBarLabel: "Discover",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "search" : "search-outline"}
-              size={22}
-              color={color}
-            />
+            <Ionicons name={focused ? "search" : "search-outline"} size={22} color={color} />
           ),
         }}
       />
-      <Tabs.Screen
-        name="messages"
-        options={{
-          title: "Messages",
-          tabBarLabel: "Messages",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "chatbubbles" : "chatbubbles-outline"}
-              size={22}
-              color={color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="notifications"
-        options={{
-          title: "Notifications",
-          tabBarLabel: "Alerts",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "notifications" : "notifications-outline"}
-              size={22}
-              color={color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "My Profile",
-          tabBarLabel: "Profile",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "person" : "person-outline"}
-              size={22}
-              color={color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen name="post" options={{ href: null }} />
-      <Tabs.Screen name="short-work" options={{ href: null }} />
-      <Tabs.Screen name="jobs" options={{ href: null }} />
+      <Tabs.Screen name="messages" options={{ href: null, title: "Messages" }} />
+      <Tabs.Screen name="notifications" options={{ href: null, title: "Notifications" }} />
+      <Tabs.Screen name="profile" options={{ href: null, title: "My Profile" }} />
     </Tabs>
   );
 }

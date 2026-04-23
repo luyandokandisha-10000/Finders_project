@@ -237,10 +237,10 @@ export default function AuthScreen() {
               />
             </View>
 
-            <View style={styles.inputWrap}>
+            <View style={styles.passwordWrap}>
               <Ionicons name="lock-closed-outline" size={20} color="#888" style={styles.inputIcon} />
               <TextInput
-                style={styles.input}
+                style={styles.passwordInput}
                 placeholder="Password"
                 value={password}
                 onChangeText={setPassword}
@@ -251,11 +251,11 @@ export default function AuthScreen() {
               <Pressable
                 onPress={() => setShowPassword(!showPassword)}
                 style={styles.eyeBtn}
-                hitSlop={10}
+                hitSlop={12}
               >
                 <Ionicons
                   name={showPassword ? "eye-off-outline" : "eye-outline"}
-                  size={20}
+                  size={22}
                   color={Colors.light.primary}
                 />
               </Pressable>
@@ -325,9 +325,32 @@ const styles = StyleSheet.create({
     flex: 1, paddingVertical: 15,
     fontFamily: "Inter_400Regular", fontSize: 16, color: "#FFFFFF",
   },
+  passwordWrap: {
+    position: "relative",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1E1E1E",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#2E2E2E",
+    paddingLeft: 14,
+    paddingRight: 50,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 15,
+    fontFamily: "Inter_400Regular",
+    fontSize: 16,
+    color: "#FFFFFF",
+  },
   eyeBtn: {
-    padding: 8,
-    marginRight: -4,
+    position: "absolute",
+    right: 8,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    width: 38,
     borderRadius: 8,
   },
   submitBtn: {

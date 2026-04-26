@@ -13,6 +13,8 @@ import {
   likePost,
   getReplies,
   createReply,
+  likeReply,
+  getReplyById,
   createJob,
   getJobs,
   getAllUsers,
@@ -204,23 +206,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/posts/:id/replies", async (req: Request, res: Response) => {
-    const replies = await getReplies(req.params.id);
+    const token = (req.headers.authorization || "").replace("Bearer ", "");
+    let currentUserId: string | undefined;
+    if (token) {
+      const u = await getUserByToken(token);
+      currentUserId = u?.id;
+    }
+    const replies = await getReplies(req.params.id, currentUserId);
     res.json(replies);
   });
 
   app.post("/api/posts/:id/replies", requireAuth as any, async (req: Request, res: Response) => {
     const userId = (req as any).userId;
     const { id } = req.params;
-    const { content } = req.body;
+    const { content, parentReplyId } = req.body;
     if (!content) return res.status(400).json({ message: "Content required" });
-    const reply = await createReply(id, userId, content);
+    const reply = await createReply(id, userId, content, parentReplyId);
     const allPosts = await getPosts();
     const post = allPosts.find(p => p.id === id);
     if (post?.userId && post.userId !== userId) {
       const actor = await getUserById(userId);
       await createNotification(post.userId, "reply", userId, id, `${actor?.fullName || "Someone"} replied to your post`);
     }
+    if (parentReplyId) {
+      const parent = await getReplyById(parentReplyId);
+      if (parent && parent.userId !== userId) {
+        const actor = await getUserById(userId);
+        await createNotification(parent.userId, "reply", userId, id, `${actor?.fullName || "Someone"} replied to your comment`);
+      }
+    }
     res.json(reply);
+  });
+
+  app.post("/api/replies/:id/like", requireAuth as any, async (req: Request, res: Response) => {
+    const userId = (req as any).userId;
+    const { id } = req.params;
+    const result = await likeReply(id, userId);
+    if (result.liked) {
+      const reply = await getReplyById(id);
+      if (reply && reply.userId !== userId) {
+        const actor = await getUserById(userId);
+        await createNotification(reply.userId, "like", userId, reply.postId, `${actor?.fullName || "Someone"} liked your comment`);
+      }
+    }
+    res.json(result);
   });
 
   app.get("/api/jobs", async (req: Request, res: Response) => {

@@ -46,7 +46,18 @@ export const postReplies = pgTable("post_replies", {
     .default(sql`gen_random_uuid()`),
   postId: varchar("post_id").notNull().references(() => posts.id),
   userId: varchar("user_id").notNull().references(() => users.id),
+  parentReplyId: varchar("parent_reply_id"),
   content: text("content").notNull(),
+  likes: integer("likes").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const replyLikes = pgTable("reply_likes", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  replyId: varchar("reply_id").notNull().references(() => postReplies.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

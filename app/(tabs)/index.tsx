@@ -24,6 +24,8 @@ import Colors from "@/constants/colors";
 import { apiRequest, getQueryFn } from "@/lib/query-client";
 import type { Post, User, PostReply } from "@shared/schema";
 import * as Haptics from "expo-haptics";
+import * as MediaLibrary from "expo-media-library";
+import * as FileSystem from "expo-file-system/legacy";
 
 function Avatar({ uri, size = 40 }: { uri?: string | null; size?: number }) {
   if (uri && uri.length > 5) {
@@ -54,24 +56,102 @@ function getTimeAgo(date: Date): string {
   return `${days}d`;
 }
 
+type ReplyWithMeta = PostReply & { user?: User; likedByMe?: boolean; parentReplyId?: string | null };
+
+function ReplyRow({
+  reply,
+  postId,
+  isChild,
+  onReplyTo,
+}: {
+  reply: ReplyWithMeta;
+  postId: string;
+  isChild?: boolean;
+  onReplyTo: (id: string, name: string) => void;
+}) {
+  const queryClient = useQueryClient();
+  const [liked, setLiked] = useState<boolean>(!!reply.likedByMe);
+  const [count, setCount] = useState<number>((reply as any).likes ?? 0);
+
+  const handleLike = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const newLiked = !liked;
+    setLiked(newLiked);
+    setCount(c => newLiked ? c + 1 : Math.max(0, c - 1));
+    try {
+      await apiRequest("POST", `/api/replies/${reply.id}/like`, {});
+      queryClient.invalidateQueries({ queryKey: [`/api/posts/${postId}/replies`] });
+    } catch {
+      setLiked(!newLiked);
+      setCount(c => newLiked ? Math.max(0, c - 1) : c + 1);
+    }
+  };
+
+  return (
+    <View style={[styles.replyItem, isChild && styles.replyItemChild]}>
+      <Avatar uri={reply.user?.avatarUrl} size={isChild ? 28 : 34} />
+      <View style={styles.replyContent}>
+        <Text style={styles.replyAuthor}>{reply.user?.fullName || "User"}</Text>
+        <Text style={styles.replyText}>{reply.content}</Text>
+        <View style={styles.replyMetaRow}>
+          <Text style={styles.replyTime}>
+            {getTimeAgo(reply.createdAt ? new Date(reply.createdAt) : new Date())}
+          </Text>
+          <Pressable onPress={handleLike} style={styles.replyAction} hitSlop={6}>
+            <Ionicons
+              name={liked ? "heart" : "heart-outline"}
+              size={14}
+              color={liked ? "#E74C3C" : "#888"}
+            />
+            {count > 0 && (
+              <Text style={[styles.replyActionText, liked && { color: "#E74C3C" }]}>{count}</Text>
+            )}
+          </Pressable>
+          {!isChild && (
+            <Pressable
+              onPress={() => onReplyTo(reply.id, reply.user?.fullName || "user")}
+              style={styles.replyAction}
+              hitSlop={6}
+            >
+              <Ionicons name="chatbubble-outline" size={13} color="#888" />
+              <Text style={styles.replyActionText}>Reply</Text>
+            </Pressable>
+          )}
+        </View>
+      </View>
+    </View>
+  );
+}
+
 function ReplyModal({ postId, visible, onClose }: { postId: string; visible: boolean; onClose: () => void }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [replyToId, setReplyToId] = useState<string | null>(null);
+  const [replyToName, setReplyToName] = useState<string>("");
 
-  const { data: replies, isLoading } = useQuery<(PostReply & { user?: User })[]>({
+  const { data: replies, isLoading } = useQuery<ReplyWithMeta[]>({
     queryKey: [`/api/posts/${postId}/replies`],
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: visible,
   });
 
+  const topLevel = (replies || []).filter(r => !(r as any).parentReplyId);
+  const childrenOf = (parentId: string) =>
+    (replies || []).filter(r => (r as any).parentReplyId === parentId);
+
   const submit = async () => {
     if (!text.trim() || sending) return;
     setSending(true);
     try {
-      await apiRequest("POST", `/api/posts/${postId}/replies`, { content: text.trim() });
+      await apiRequest("POST", `/api/posts/${postId}/replies`, {
+        content: text.trim(),
+        parentReplyId: replyToId,
+      });
       setText("");
+      setReplyToId(null);
+      setReplyToName("");
       queryClient.invalidateQueries({ queryKey: [`/api/posts/${postId}/replies`] });
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -80,6 +160,11 @@ function ReplyModal({ postId, visible, onClose }: { postId: string; visible: boo
     } finally {
       setSending(false);
     }
+  };
+
+  const handleReplyTo = (id: string, name: string) => {
+    setReplyToId(id);
+    setReplyToName(name);
   };
 
   return (
@@ -101,18 +186,20 @@ function ReplyModal({ postId, visible, onClose }: { postId: string; visible: boo
           </View>
         ) : (
           <FlatList
-            data={replies || []}
+            data={topLevel}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <View style={styles.replyItem}>
-                <Avatar uri={item.user?.avatarUrl} size={34} />
-                <View style={styles.replyContent}>
-                  <Text style={styles.replyAuthor}>{item.user?.fullName || "User"}</Text>
-                  <Text style={styles.replyText}>{item.content}</Text>
-                  <Text style={styles.replyTime}>
-                    {getTimeAgo(item.createdAt ? new Date(item.createdAt) : new Date())}
-                  </Text>
-                </View>
+              <View>
+                <ReplyRow reply={item} postId={postId} onReplyTo={handleReplyTo} />
+                {childrenOf(item.id).map((child) => (
+                  <ReplyRow
+                    key={child.id}
+                    reply={child}
+                    postId={postId}
+                    isChild
+                    onReplyTo={handleReplyTo}
+                  />
+                ))}
               </View>
             )}
             ListEmptyComponent={
@@ -124,11 +211,22 @@ function ReplyModal({ postId, visible, onClose }: { postId: string; visible: boo
           />
         )}
 
+        {replyToId && (
+          <View style={styles.replyingBanner}>
+            <Text style={styles.replyingText}>
+              Replying to <Text style={{ color: Colors.light.primary }}>{replyToName}</Text>
+            </Text>
+            <Pressable onPress={() => { setReplyToId(null); setReplyToName(""); }} hitSlop={8}>
+              <Ionicons name="close-circle" size={18} color="#888" />
+            </Pressable>
+          </View>
+        )}
+
         <View style={styles.replyInput}>
           <Avatar uri={user?.avatarUrl} size={32} />
           <TextInput
             style={styles.replyTextInput}
-            placeholder="Write a reply..."
+            placeholder={replyToId ? `Reply to ${replyToName}...` : "Write a reply..."}
             placeholderTextColor="#666"
             value={text}
             onChangeText={setText}
@@ -151,11 +249,81 @@ function ReplyModal({ postId, visible, onClose }: { postId: string; visible: boo
   );
 }
 
+function ImageLightbox({ uri, visible, onClose }: { uri: string; visible: boolean; onClose: () => void }) {
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      if (Platform.OS === "web") {
+        const a = document.createElement("a");
+        a.href = uri;
+        a.download = `finders-${Date.now()}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        const perm = await MediaLibrary.requestPermissionsAsync();
+        if (!perm.granted) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          alert("Permission to save photos was denied.");
+          return;
+        }
+        let fileUri = uri;
+        if (uri.startsWith("data:")) {
+          const base64 = uri.split(",")[1] || "";
+          const path = `${FileSystem.cacheDirectory}finders-${Date.now()}.jpg`;
+          await FileSystem.writeAsStringAsync(path, base64, { encoding: FileSystem.EncodingType.Base64 });
+          fileUri = path;
+        }
+        await MediaLibrary.saveToLibraryAsync(fileUri);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        alert("Image saved to your photos.");
+      }
+    } catch (e) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      alert("Could not save the image.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal visible={visible} onRequestClose={onClose} animationType="fade" transparent>
+      <View style={styles.lightboxRoot}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <View style={styles.lightboxTopBar} pointerEvents="box-none">
+          <Pressable onPress={onClose} style={styles.lightboxBtn} hitSlop={10}>
+            <Ionicons name="close" size={24} color="#fff" />
+          </Pressable>
+          <Pressable onPress={handleSave} style={styles.lightboxBtn} hitSlop={10} disabled={saving}>
+            {saving ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="download" size={22} color="#fff" />
+            )}
+          </Pressable>
+        </View>
+        <Image
+          source={{ uri }}
+          style={styles.lightboxImage}
+          contentFit="contain"
+          pointerEvents="none"
+        />
+      </View>
+    </Modal>
+  );
+}
+
 function PostCard({ post, currentUserId }: { post: Post & { user?: User; likedByMe?: boolean; replyCount?: number }; currentUserId?: string }) {
   const queryClient = useQueryClient();
   const [liked, setLiked] = useState<boolean>(!!post.likedByMe);
   const [likesCount, setLikesCount] = useState(post.likes ?? 0);
   const [showReplies, setShowReplies] = useState(false);
+  const [showImage, setShowImage] = useState(false);
   const heartScale = useRef(new Animated.Value(1)).current;
 
   const timeAgo = getTimeAgo(post.createdAt ? new Date(post.createdAt) : new Date());
@@ -209,11 +377,13 @@ function PostCard({ post, currentUserId }: { post: Post & { user?: User; likedBy
       <Text style={styles.postContent}>{post.content}</Text>
 
       {!!post.imageUrl && (
-        <Image
-          source={{ uri: post.imageUrl }}
-          style={styles.postImage}
-          contentFit="cover"
-        />
+        <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowImage(true); }}>
+          <Image
+            source={{ uri: post.imageUrl }}
+            style={styles.postImage}
+            contentFit="cover"
+          />
+        </Pressable>
       )}
 
       <View style={styles.postActions}>
@@ -246,6 +416,13 @@ function PostCard({ post, currentUserId }: { post: Post & { user?: User; likedBy
         visible={showReplies}
         onClose={() => setShowReplies(false)}
       />
+      {!!post.imageUrl && (
+        <ImageLightbox
+          uri={post.imageUrl}
+          visible={showImage}
+          onClose={() => setShowImage(false)}
+        />
+      )}
     </View>
   );
 }
@@ -405,5 +582,64 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.primary,
     alignItems: "center",
     justifyContent: "center",
+  },
+  replyItemChild: {
+    paddingLeft: 50,
+    backgroundColor: "#16161680",
+  },
+  replyMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginTop: 4,
+  },
+  replyAction: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  replyActionText: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 12,
+    color: "#888",
+  },
+  replyingBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: "#1A1A1A",
+    borderTopWidth: 1,
+    borderTopColor: "#2E2E2E",
+  },
+  replyingText: { fontFamily: "Inter_400Regular", fontSize: 13, color: "#888" },
+  lightboxRoot: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.95)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  lightboxTopBar: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 50 : 20,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    zIndex: 2,
+  },
+  lightboxBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  lightboxImage: {
+    width: "100%",
+    height: "100%",
   },
 });

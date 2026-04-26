@@ -1,6 +1,6 @@
 import { eq, and, desc, sql } from "drizzle-orm";
 import { db } from "./db";
-import { users, posts, jobs, postLikes, postReplies, conversations, conversationParticipants, messages, notifications } from "@shared/schema";
+import { users, posts, jobs, postLikes, postReplies, replyLikes, conversations, conversationParticipants, messages, notifications } from "@shared/schema";
 import type { User, Post, Job, PostReply, Message, Conversation, Notification } from "@shared/schema";
 import { createHash, randomBytes } from "crypto";
 
@@ -95,18 +95,45 @@ export async function likePost(postId: string, userId: string): Promise<{ liked:
   }
 }
 
-export async function getReplies(postId: string): Promise<(PostReply & { user?: User })[]> {
+export async function getReplies(postId: string, currentUserId?: string): Promise<any[]> {
   const allReplies = await db.select().from(postReplies).where(eq(postReplies.postId, postId)).orderBy(postReplies.createdAt);
   const result = [];
   for (const reply of allReplies) {
     const user = await getUserById(reply.userId);
-    result.push({ ...reply, user: user ? safeUser(user) : undefined });
+    let likedByMe = false;
+    if (currentUserId) {
+      const [existing] = await db.select().from(replyLikes).where(
+        and(eq(replyLikes.replyId, reply.id), eq(replyLikes.userId, currentUserId))
+      );
+      likedByMe = !!existing;
+    }
+    result.push({ ...reply, user: user ? safeUser(user) : undefined, likedByMe });
   }
   return result;
 }
 
-export async function createReply(postId: string, userId: string, content: string): Promise<PostReply> {
-  const [reply] = await db.insert(postReplies).values({ postId, userId, content }).returning();
+export async function createReply(postId: string, userId: string, content: string, parentReplyId?: string): Promise<PostReply> {
+  const [reply] = await db.insert(postReplies).values({ postId, userId, content, parentReplyId: parentReplyId || null }).returning();
+  return reply;
+}
+
+export async function likeReply(replyId: string, userId: string): Promise<{ liked: boolean; likes: number }> {
+  const [existing] = await db.select().from(replyLikes).where(
+    and(eq(replyLikes.replyId, replyId), eq(replyLikes.userId, userId))
+  );
+  if (existing) {
+    await db.delete(replyLikes).where(eq(replyLikes.id, existing.id));
+    const [updated] = await db.update(postReplies).set({ likes: sql`GREATEST(likes - 1, 0)` }).where(eq(postReplies.id, replyId)).returning();
+    return { liked: false, likes: updated?.likes ?? 0 };
+  } else {
+    await db.insert(replyLikes).values({ replyId, userId });
+    const [updated] = await db.update(postReplies).set({ likes: sql`likes + 1` }).where(eq(postReplies.id, replyId)).returning();
+    return { liked: true, likes: updated?.likes ?? 0 };
+  }
+}
+
+export async function getReplyById(replyId: string): Promise<PostReply | undefined> {
+  const [reply] = await db.select().from(postReplies).where(eq(postReplies.id, replyId));
   return reply;
 }
 

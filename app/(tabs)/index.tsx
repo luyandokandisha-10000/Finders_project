@@ -62,12 +62,14 @@ function ReplyRow({
   reply,
   postId,
   isChild,
+  threadParentId,
   onReplyTo,
 }: {
   reply: ReplyWithMeta;
   postId: string;
   isChild?: boolean;
-  onReplyTo: (id: string, name: string) => void;
+  threadParentId?: string;
+  onReplyTo: (threadParentId: string, name: string) => void;
 }) {
   const queryClient = useQueryClient();
   const [liked, setLiked] = useState<boolean>(!!reply.likedByMe);
@@ -107,16 +109,16 @@ function ReplyRow({
               <Text style={[styles.replyActionText, liked && { color: "#E74C3C" }]}>{count}</Text>
             )}
           </Pressable>
-          {!isChild && (
-            <Pressable
-              onPress={() => onReplyTo(reply.id, reply.user?.fullName || "user")}
-              style={styles.replyAction}
-              hitSlop={6}
-            >
-              <Ionicons name="chatbubble-outline" size={13} color="#888" />
-              <Text style={styles.replyActionText}>Reply</Text>
-            </Pressable>
-          )}
+          <Pressable
+            onPress={() =>
+              onReplyTo(threadParentId || reply.id, reply.user?.fullName || "user")
+            }
+            style={styles.replyAction}
+            hitSlop={6}
+          >
+            <Ionicons name="chatbubble-outline" size={13} color="#888" />
+            <Text style={styles.replyActionText}>Reply</Text>
+          </Pressable>
         </View>
       </View>
     </View>
@@ -197,6 +199,7 @@ function ReplyModal({ postId, visible, onClose }: { postId: string; visible: boo
                     reply={child}
                     postId={postId}
                     isChild
+                    threadParentId={item.id}
                     onReplyTo={handleReplyTo}
                   />
                 ))}

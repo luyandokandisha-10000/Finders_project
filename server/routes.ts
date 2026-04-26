@@ -205,13 +205,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(result);
   });
 
-  app.get("/api/posts/:id/replies", async (req: Request, res: Response) => {
-    const token = (req.headers.authorization || "").replace("Bearer ", "");
-    let currentUserId: string | undefined;
-    if (token) {
-      const u = await getUserByToken(token);
-      currentUserId = u?.id;
-    }
+  app.get("/api/posts/:id/replies", optionalAuth as any, async (req: Request, res: Response) => {
+    const currentUserId = (req as any).userId as string | undefined;
     const replies = await getReplies(req.params.id, currentUserId);
     res.json(replies);
   });
@@ -256,6 +251,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const isShortWork = req.query.shortWork === "true" ? true : req.query.shortWork === "false" ? false : undefined;
     const allJobs = await getJobs(isShortWork);
     res.json(allJobs);
+  });
+
+  app.get("/api/jobs/:id", async (req: Request, res: Response) => {
+    const all = await getJobs();
+    const job = all.find(j => j.id === req.params.id);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+    res.json(job);
   });
 
   app.post("/api/jobs", requireAuth as any, async (req: Request, res: Response) => {

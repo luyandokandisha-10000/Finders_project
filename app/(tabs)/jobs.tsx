@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,17 +6,41 @@ import {
   StyleSheet,
   Pressable,
   RefreshControl,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { getQueryFn } from "@/lib/query-client";
+import * as Haptics from "expo-haptics";
+import { apiRequest, getQueryFn } from "@/lib/query-client";
+import { useAuth } from "@/lib/auth-context";
 import Colors from "@/constants/colors";
 import type { Job, User } from "@shared/schema";
 
-function JobCard({ job }: { job: Job & { user?: User } }) {
+function JobCard({ job, currentUserId }: { job: Job & { user?: User }; currentUserId?: string }) {
+  const [messaging, setMessaging] = useState(false);
+  const isOwn = job.userId === currentUserId;
+
+  const openDetail = () => router.push(`/job/${job.id}`);
+
+  const handleMessage = async (e: any) => {
+    e?.stopPropagation?.();
+    if (!job.userId) return;
+    setMessaging(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      const conv = await apiRequest("POST", "/api/conversations", { targetUserId: job.userId });
+      router.push(`/conversation/${conv.id}`);
+    } catch {
+      Alert.alert("Error", "Could not start conversation.");
+    } finally {
+      setMessaging(false);
+    }
+  };
+
   return (
-    <View style={styles.card}>
+    <Pressable onPress={openDetail} style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.iconCircle}>
           <Ionicons name="briefcase" size={20} color={Colors.light.primary} />
@@ -49,16 +73,36 @@ function JobCard({ job }: { job: Job & { user?: User } }) {
         <Text style={styles.postedBy}>
           Posted by {job.user?.fullName || "Unknown"}
         </Text>
-        <Pressable style={styles.applyBtn}>
-          <Text style={styles.applyBtnText}>View</Text>
-          <Ionicons name="arrow-forward" size={14} color={Colors.light.primary} />
-        </Pressable>
+        <View style={styles.cardActions}>
+          {!isOwn && job.userId && (
+            <Pressable
+              style={styles.messageBtn}
+              onPress={handleMessage}
+              disabled={messaging}
+              hitSlop={6}
+            >
+              {messaging ? (
+                <ActivityIndicator size="small" color={Colors.light.primary} />
+              ) : (
+                <>
+                  <Ionicons name="chatbubble-ellipses-outline" size={14} color={Colors.light.primary} />
+                  <Text style={styles.messageBtnText}>Message</Text>
+                </>
+              )}
+            </Pressable>
+          )}
+          <Pressable style={styles.applyBtn} onPress={openDetail} hitSlop={6}>
+            <Text style={styles.applyBtnText}>View</Text>
+            <Ionicons name="arrow-forward" size={14} color={Colors.light.primary} />
+          </Pressable>
+        </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
 export default function JobsScreen() {
+  const { user } = useAuth();
   const { data: jobs, isLoading, refetch } = useQuery<(Job & { user?: User })[]>({
     queryKey: ["/api/jobs?shortWork=false"],
     queryFn: getQueryFn({ on401: "returnNull" }),
@@ -69,7 +113,7 @@ export default function JobsScreen() {
       <FlatList
         data={jobs || []}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <JobCard job={item} />}
+        renderItem={({ item }) => <JobCard job={item} currentUserId={user?.id} />}
         contentContainerStyle={[
           styles.listContent,
           (!jobs || jobs.length === 0) && styles.emptyListContent,
@@ -196,6 +240,26 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontSize: 12,
     color: "#888",
+  },
+  cardActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  messageBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.light.primary + "60",
+  },
+  messageBtnText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 12,
+    color: Colors.light.primary,
   },
   applyBtn: {
     flexDirection: "row",

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,17 +6,41 @@ import {
   StyleSheet,
   Pressable,
   RefreshControl,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { getQueryFn } from "@/lib/query-client";
+import * as Haptics from "expo-haptics";
+import { apiRequest, getQueryFn } from "@/lib/query-client";
+import { useAuth } from "@/lib/auth-context";
 import Colors from "@/constants/colors";
 import type { Job, User } from "@shared/schema";
 
-function ShortWorkCard({ job }: { job: Job & { user?: User } }) {
+function ShortWorkCard({ job, currentUserId }: { job: Job & { user?: User }; currentUserId?: string }) {
+  const [messaging, setMessaging] = useState(false);
+  const isOwn = job.userId === currentUserId;
+
+  const openDetail = () => router.push(`/job/${job.id}`);
+
+  const handleMessage = async (e: any) => {
+    e?.stopPropagation?.();
+    if (!job.userId) return;
+    setMessaging(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      const conv = await apiRequest("POST", "/api/conversations", { targetUserId: job.userId });
+      router.push(`/conversation/${conv.id}`);
+    } catch {
+      Alert.alert("Error", "Could not start conversation.");
+    } finally {
+      setMessaging(false);
+    }
+  };
+
   return (
-    <View style={styles.card}>
+    <Pressable onPress={openDetail} style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.iconCircle}>
           <Ionicons name="flash" size={20} color="#F59E0B" />
@@ -48,12 +72,36 @@ function ShortWorkCard({ job }: { job: Job & { user?: User } }) {
         <Text style={styles.postedBy}>
           Posted by {job.user?.fullName || "Unknown"}
         </Text>
+        <View style={styles.cardActions}>
+          {!isOwn && job.userId && (
+            <Pressable
+              style={styles.messageBtn}
+              onPress={handleMessage}
+              disabled={messaging}
+              hitSlop={6}
+            >
+              {messaging ? (
+                <ActivityIndicator size="small" color={Colors.light.primary} />
+              ) : (
+                <>
+                  <Ionicons name="chatbubble-ellipses-outline" size={14} color={Colors.light.primary} />
+                  <Text style={styles.messageBtnText}>Message</Text>
+                </>
+              )}
+            </Pressable>
+          )}
+          <Pressable style={styles.viewBtn} onPress={openDetail} hitSlop={6}>
+            <Text style={styles.viewBtnText}>View</Text>
+            <Ionicons name="arrow-forward" size={14} color={Colors.light.primary} />
+          </Pressable>
+        </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
 export default function ShortWorkScreen() {
+  const { user } = useAuth();
   const { data: jobs, isLoading, refetch } = useQuery<(Job & { user?: User })[]>({
     queryKey: ["/api/jobs?shortWork=true"],
     queryFn: getQueryFn({ on401: "returnNull" }),
@@ -64,7 +112,7 @@ export default function ShortWorkScreen() {
       <FlatList
         data={jobs || []}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ShortWorkCard job={item} />}
+        renderItem={({ item }) => <ShortWorkCard job={item} currentUserId={user?.id} />}
         contentContainerStyle={[
           styles.listContent,
           (!jobs || jobs.length === 0) && styles.emptyListContent,
@@ -193,11 +241,45 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#333",
     paddingTop: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   postedBy: {
     fontFamily: "Inter_400Regular",
     fontSize: 12,
     color: "#888",
+    flex: 1,
+  },
+  cardActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  messageBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.light.primary + "60",
+  },
+  messageBtnText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 12,
+    color: Colors.light.primary,
+  },
+  viewBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  viewBtnText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 13,
+    color: Colors.light.primary,
   },
   emptyState: {
     flex: 1,

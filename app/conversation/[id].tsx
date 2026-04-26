@@ -100,6 +100,12 @@ export default function ConversationScreen() {
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.light.primary} />
         </View>
+      ) : reversedMessages.length === 0 ? (
+        <View style={styles.emptyChat}>
+          {otherUser && <Avatar uri={otherUser.avatarUrl} size={60} />}
+          <Text style={styles.emptyChatName}>{otherUser?.fullName || "User"}</Text>
+          <Text style={styles.emptyChatHint}>Say hello!</Text>
+        </View>
       ) : (
         <FlatList
           ref={flatListRef}
@@ -130,13 +136,6 @@ export default function ConversationScreen() {
           showsVerticalScrollIndicator={false}
           keyboardDismissMode="interactive"
           keyboardShouldPersistTaps="handled"
-          ListEmptyComponent={
-            <View style={styles.emptyChat}>
-              {otherUser && <Avatar uri={otherUser.avatarUrl} size={60} />}
-              <Text style={styles.emptyChatName}>{otherUser?.fullName || "User"}</Text>
-              <Text style={styles.emptyChatHint}>Say hello!</Text>
-            </View>
-          }
         />
       )}
 
@@ -189,7 +188,6 @@ const styles = StyleSheet.create({
   bubbleTimeMe: { color: Colors.light.dark + "AA" },
   emptyChat: {
     flex: 1, alignItems: "center", justifyContent: "center", padding: 60, gap: 12,
-    transform: [{ scaleY: -1 }],
   },
   emptyChatName: { fontFamily: "Inter_600SemiBold", fontSize: 18, color: "#FFF" },
   emptyChatHint: { fontFamily: "Inter_400Regular", fontSize: 14, color: "#888" },

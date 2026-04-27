@@ -63,12 +63,14 @@ function ReplyRow({
   postId,
   isChild,
   threadParentId,
+  mentionName,
   onReplyTo,
 }: {
   reply: ReplyWithMeta;
   postId: string;
   isChild?: boolean;
   threadParentId?: string;
+  mentionName?: string;
   onReplyTo: (threadParentId: string, name: string) => void;
 }) {
   const queryClient = useQueryClient();
@@ -89,20 +91,30 @@ function ReplyRow({
     }
   };
 
+  const showMention = isChild && mentionName && mentionName !== (reply.user?.fullName || "");
+
   return (
     <View style={[styles.replyItem, isChild && styles.replyItemChild]}>
       <Avatar uri={reply.user?.avatarUrl} size={isChild ? 28 : 34} />
       <View style={styles.replyContent}>
-        <Text style={styles.replyAuthor}>{reply.user?.fullName || "User"}</Text>
-        <Text style={styles.replyText}>{reply.content}</Text>
-        <View style={styles.replyMetaRow}>
+        <View style={styles.replyAuthorRow}>
+          <Text style={styles.replyAuthor}>{reply.user?.fullName || "User"}</Text>
+          <Text style={styles.replyDot}>·</Text>
           <Text style={styles.replyTime}>
             {getTimeAgo(reply.createdAt ? new Date(reply.createdAt) : new Date())}
           </Text>
+        </View>
+        <Text style={styles.replyText}>
+          {showMention && (
+            <Text style={styles.mention}>@{mentionName}{" "}</Text>
+          )}
+          {reply.content}
+        </Text>
+        <View style={styles.replyMetaRow}>
           <Pressable onPress={handleLike} style={styles.replyAction} hitSlop={6}>
             <Ionicons
               name={liked ? "heart" : "heart-outline"}
-              size={14}
+              size={15}
               color={liked ? "#E74C3C" : "#888"}
             />
             {count > 0 && (
@@ -116,11 +128,63 @@ function ReplyRow({
             style={styles.replyAction}
             hitSlop={6}
           >
-            <Ionicons name="chatbubble-outline" size={13} color="#888" />
             <Text style={styles.replyActionText}>Reply</Text>
           </Pressable>
         </View>
       </View>
+    </View>
+  );
+}
+
+function ThreadItem({
+  parent,
+  children,
+  postId,
+  onReplyTo,
+}: {
+  parent: ReplyWithMeta;
+  children: ReplyWithMeta[];
+  postId: string;
+  onReplyTo: (threadParentId: string, name: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const childCount = children.length;
+
+  return (
+    <View>
+      <ReplyRow reply={parent} postId={postId} onReplyTo={onReplyTo} />
+      {childCount > 0 && (
+        <Pressable
+          onPress={() => {
+            Haptics.selectionAsync();
+            setExpanded(e => !e);
+          }}
+          style={styles.viewRepliesBtn}
+          hitSlop={6}
+        >
+          <View style={styles.viewRepliesLine} />
+          <Ionicons
+            name={expanded ? "chevron-up" : "chevron-down"}
+            size={16}
+            color={Colors.light.primary}
+          />
+          <Text style={styles.viewRepliesText}>
+            {expanded ? "Hide" : "View"} {childCount} {childCount === 1 ? "reply" : "replies"}
+          </Text>
+        </Pressable>
+      )}
+      {expanded &&
+        children.map((child) => (
+          <ReplyRow
+            key={child.id}
+            reply={child}
+            postId={postId}
+            isChild
+            threadParentId={parent.id}
+            mentionName={parent.user?.fullName}
+            onReplyTo={onReplyTo}
+          />
+        ))}
     </View>
   );
 }
@@ -191,19 +255,12 @@ function ReplyModal({ postId, visible, onClose }: { postId: string; visible: boo
             data={topLevel}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <View>
-                <ReplyRow reply={item} postId={postId} onReplyTo={handleReplyTo} />
-                {childrenOf(item.id).map((child) => (
-                  <ReplyRow
-                    key={child.id}
-                    reply={child}
-                    postId={postId}
-                    isChild
-                    threadParentId={item.id}
-                    onReplyTo={handleReplyTo}
-                  />
-                ))}
-              </View>
+              <ThreadItem
+                parent={item}
+                children={childrenOf(item.id)}
+                postId={postId}
+                onReplyTo={handleReplyTo}
+              />
             )}
             ListEmptyComponent={
               <View style={styles.emptyReplies}>
@@ -588,23 +645,57 @@ const styles = StyleSheet.create({
   },
   replyItemChild: {
     paddingLeft: 50,
-    backgroundColor: "#16161680",
+    borderBottomWidth: 0,
+  },
+  replyAuthorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  replyDot: { fontFamily: "Inter_400Regular", fontSize: 12, color: "#666" },
+  mention: {
+    fontFamily: "Inter_500Medium",
+    color: Colors.light.primary,
   },
   replyMetaRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
-    marginTop: 4,
+    gap: 18,
+    marginTop: 6,
   },
   replyAction: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 5,
   },
   replyActionText: {
     fontFamily: "Inter_500Medium",
     fontSize: 12,
     color: "#888",
+  },
+  viewRepliesBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingLeft: 60,
+    marginBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: "#1E1E1E",
+  },
+  viewRepliesLine: {
+    position: "absolute",
+    left: 30,
+    top: 0,
+    bottom: 0,
+    width: 1,
+    backgroundColor: "#2E2E2E",
+  },
+  viewRepliesText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 13,
+    color: Colors.light.primary,
   },
   replyingBanner: {
     flexDirection: "row",

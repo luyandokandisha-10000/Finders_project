@@ -61,17 +61,15 @@ type ReplyWithMeta = PostReply & { user?: User; likedByMe?: boolean; parentReply
 function ReplyRow({
   reply,
   postId,
-  isChild,
-  threadParentId,
+  depth,
   mentionName,
   onReplyTo,
 }: {
   reply: ReplyWithMeta;
   postId: string;
-  isChild?: boolean;
-  threadParentId?: string;
+  depth: number;
   mentionName?: string;
-  onReplyTo: (threadParentId: string, name: string) => void;
+  onReplyTo: (parentReplyId: string, name: string) => void;
 }) {
   const queryClient = useQueryClient();
   const [liked, setLiked] = useState<boolean>(!!reply.likedByMe);
@@ -91,11 +89,13 @@ function ReplyRow({
     }
   };
 
-  const showMention = isChild && mentionName && mentionName !== (reply.user?.fullName || "");
+  const indent = Math.min(depth, 4) * 22;
+  const avatarSize = depth === 0 ? 34 : 26;
+  const showMention = depth > 0 && mentionName && mentionName !== (reply.user?.fullName || "");
 
   return (
-    <View style={[styles.replyItem, isChild && styles.replyItemChild]}>
-      <Avatar uri={reply.user?.avatarUrl} size={isChild ? 28 : 34} />
+    <View style={[styles.replyItem, depth > 0 && styles.replyItemChild, { paddingLeft: 16 + indent }]}>
+      <Avatar uri={reply.user?.avatarUrl} size={avatarSize} />
       <View style={styles.replyContent}>
         <View style={styles.replyAuthorRow}>
           <Text style={styles.replyAuthor}>{reply.user?.fullName || "User"}</Text>
@@ -122,9 +122,7 @@ function ReplyRow({
             )}
           </Pressable>
           <Pressable
-            onPress={() =>
-              onReplyTo(threadParentId || reply.id, reply.user?.fullName || "user")
-            }
+            onPress={() => onReplyTo(reply.id, reply.user?.fullName || "user")}
             style={styles.replyAction}
             hitSlop={6}
           >
@@ -136,33 +134,44 @@ function ReplyRow({
   );
 }
 
-function ThreadItem({
-  parent,
-  children,
+function ThreadNode({
+  reply,
+  childrenOf,
   postId,
+  depth,
+  parentName,
   onReplyTo,
 }: {
-  parent: ReplyWithMeta;
-  children: ReplyWithMeta[];
+  reply: ReplyWithMeta;
+  childrenOf: (id: string) => ReplyWithMeta[];
   postId: string;
-  onReplyTo: (threadParentId: string, name: string) => void;
+  depth: number;
+  parentName?: string;
+  onReplyTo: (parentReplyId: string, name: string) => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(depth === 0 ? false : true);
+  const children = childrenOf(reply.id);
   const childCount = children.length;
+  const indent = Math.min(depth, 4) * 22;
 
   return (
     <View>
-      <ReplyRow reply={parent} postId={postId} onReplyTo={onReplyTo} />
+      <ReplyRow
+        reply={reply}
+        postId={postId}
+        depth={depth}
+        mentionName={parentName}
+        onReplyTo={onReplyTo}
+      />
       {childCount > 0 && (
         <Pressable
           onPress={() => {
             Haptics.selectionAsync();
             setExpanded(e => !e);
           }}
-          style={styles.viewRepliesBtn}
+          style={[styles.viewRepliesBtn, { paddingLeft: 60 + indent }]}
           hitSlop={6}
         >
-          <View style={styles.viewRepliesLine} />
           <Ionicons
             name={expanded ? "chevron-up" : "chevron-down"}
             size={16}
@@ -175,13 +184,13 @@ function ThreadItem({
       )}
       {expanded &&
         children.map((child) => (
-          <ReplyRow
+          <ThreadNode
             key={child.id}
             reply={child}
+            childrenOf={childrenOf}
             postId={postId}
-            isChild
-            threadParentId={parent.id}
-            mentionName={parent.user?.fullName}
+            depth={depth + 1}
+            parentName={reply.user?.fullName}
             onReplyTo={onReplyTo}
           />
         ))}
@@ -255,10 +264,11 @@ function ReplyModal({ postId, visible, onClose }: { postId: string; visible: boo
             data={topLevel}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <ThreadItem
-                parent={item}
-                children={childrenOf(item.id)}
+              <ThreadNode
+                reply={item}
+                childrenOf={childrenOf}
                 postId={postId}
+                depth={0}
                 onReplyTo={handleReplyTo}
               />
             )}
@@ -644,8 +654,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   replyItemChild: {
-    paddingLeft: 50,
     borderBottomWidth: 0,
+    paddingVertical: 8,
   },
   replyAuthorRow: {
     flexDirection: "row",
@@ -676,21 +686,10 @@ const styles = StyleSheet.create({
   viewRepliesBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    paddingLeft: 60,
-    marginBottom: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1E1E1E",
-  },
-  viewRepliesLine: {
-    position: "absolute",
-    left: 30,
-    top: 0,
-    bottom: 0,
-    width: 1,
-    backgroundColor: "#2E2E2E",
+    gap: 6,
+    paddingVertical: 6,
+    paddingRight: 16,
+    marginBottom: 2,
   },
   viewRepliesText: {
     fontFamily: "Inter_600SemiBold",

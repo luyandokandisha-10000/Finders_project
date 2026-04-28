@@ -39,7 +39,7 @@ Preferred communication style: Simple, everyday language.
 ### Database (PostgreSQL + Drizzle ORM)
 
 - **Schema** (`shared/schema.ts`): 9 tables:
-  - `users` — id, email, password, fullName, role, bio, location, skills, avatarUrl, **phone**, createdAt
+  - `users` — id, email, password, fullName, role, bio, location, skills, avatarUrl, **phone**, **zoomLink**, createdAt
   - `posts` — id, userId, content, type, likes, **imageUrl**, createdAt
   - `jobs` — id, userId, title, company, location, description, type, salary, isShortWork, createdAt
   - `auth_tokens` — id, userId, token, createdAt
@@ -59,6 +59,7 @@ Preferred communication style: Simple, everyday language.
 - **Notifications Tab**: Like/reply/hire/message notifications. Auto-marks-read after 2s. Unread indicator dot
 - **User Profile View** (`/user/:id`): Avatar, role badge, bio, skills chips, phone/email, recent posts, Message + Hire buttons
 - **Hire Flow**: `POST /api/users/:id/hire` sends a "hire" type notification to the target user
+- **Zoom Calls**: Users save a personal Zoom Meeting Link in profile. Chat header has a video icon that posts a tappable Zoom-call card into the conversation and opens Zoom via `Linking.openURL`. Zoom URLs in any message render as a special "Tap to join" call bubble. User profiles show a "Join their Zoom Room" CTA when the other user has a link set
 - **Image Upload**: Base64 encoded via expo-image-picker, stored directly in DB (avatarUrl, imageUrl fields)
 
 ### Build & Deployment

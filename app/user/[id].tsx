@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Linking,
 } from "react-native";
 import { useLocalSearchParams, router, useNavigation } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -92,6 +93,17 @@ export default function UserProfileScreen() {
     }
   };
 
+  const handleZoomCall = async () => {
+    const link = ((profileUser as any)?.zoomLink || "").trim();
+    if (!link) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      await Linking.openURL(link);
+    } catch {
+      Alert.alert("Could not open Zoom", "The link may be invalid.");
+    }
+  };
+
   const handleHire = async () => {
     if (!currentUser) { router.push("/auth"); return; }
     setHiringLoading(true);
@@ -156,36 +168,52 @@ export default function UserProfileScreen() {
       </View>
 
       {!isOwnProfile && currentUser && (
-        <View style={styles.actionRow}>
-          <Pressable
-            style={[styles.actionPrimary, messagingLoading && { opacity: 0.6 }]}
-            onPress={handleMessage}
-            disabled={messagingLoading}
-          >
-            {messagingLoading ? (
-              <ActivityIndicator size="small" color={Colors.light.dark} />
-            ) : (
-              <>
-                <Ionicons name="chatbubble" size={18} color={Colors.light.dark} />
-                <Text style={styles.actionPrimaryText}>Message</Text>
-              </>
-            )}
-          </Pressable>
-          <Pressable
-            style={[styles.actionSecondary, hiringLoading && { opacity: 0.6 }]}
-            onPress={handleHire}
-            disabled={hiringLoading}
-          >
-            {hiringLoading ? (
-              <ActivityIndicator size="small" color={Colors.light.primary} />
-            ) : (
-              <>
-                <Ionicons name="briefcase-outline" size={18} color={Colors.light.primary} />
-                <Text style={styles.actionSecondaryText}>Hire</Text>
-              </>
-            )}
-          </Pressable>
-        </View>
+        <>
+          <View style={styles.actionRow}>
+            <Pressable
+              style={[styles.actionPrimary, messagingLoading && { opacity: 0.6 }]}
+              onPress={handleMessage}
+              disabled={messagingLoading}
+            >
+              {messagingLoading ? (
+                <ActivityIndicator size="small" color={Colors.light.dark} />
+              ) : (
+                <>
+                  <Ionicons name="chatbubble" size={18} color={Colors.light.dark} />
+                  <Text style={styles.actionPrimaryText}>Message</Text>
+                </>
+              )}
+            </Pressable>
+            <Pressable
+              style={[styles.actionSecondary, hiringLoading && { opacity: 0.6 }]}
+              onPress={handleHire}
+              disabled={hiringLoading}
+            >
+              {hiringLoading ? (
+                <ActivityIndicator size="small" color={Colors.light.primary} />
+              ) : (
+                <>
+                  <Ionicons name="briefcase-outline" size={18} color={Colors.light.primary} />
+                  <Text style={styles.actionSecondaryText}>Hire</Text>
+                </>
+              )}
+            </Pressable>
+          </View>
+          {((profileUser as any)?.zoomLink || "").trim().length > 0 && (
+            <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+              <Pressable
+                style={({ pressed }) => [styles.zoomCallBtn, pressed && { opacity: 0.85 }]}
+                onPress={handleZoomCall}
+                testID="user-zoom-call"
+              >
+                <Ionicons name="videocam" size={18} color={Colors.light.dark} />
+                <Text style={styles.zoomCallBtnText}>
+                  Join {profileUser.fullName ? `${profileUser.fullName.split(" ")[0]}'s` : "their"} Zoom Room
+                </Text>
+              </Pressable>
+            </View>
+          )}
+        </>
       )}
 
       {profileUser.bio ? (
@@ -272,6 +300,11 @@ const styles = StyleSheet.create({
     gap: 8, borderWidth: 1.5, borderColor: Colors.light.primary, borderRadius: 12, paddingVertical: 13,
   },
   actionSecondaryText: { fontFamily: "Inter_700Bold", fontSize: 15, color: Colors.light.primary },
+  zoomCallBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 8, backgroundColor: Colors.light.primary, borderRadius: 12, paddingVertical: 12,
+  },
+  zoomCallBtnText: { fontFamily: "Inter_700Bold", fontSize: 14, color: Colors.light.dark },
   section: { padding: 16, borderBottomWidth: 1, borderBottomColor: "#1A1A1A" },
   sectionTitle: { fontFamily: "Inter_600SemiBold", fontSize: 14, color: Colors.light.primary, marginBottom: 10 },
   bioText: { fontFamily: "Inter_400Regular", fontSize: 14, color: "#CCC", lineHeight: 22 },

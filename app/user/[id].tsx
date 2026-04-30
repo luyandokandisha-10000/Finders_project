@@ -120,6 +120,32 @@ export default function UserProfileScreen() {
 
   const roleColor = ROLE_COLORS[profileUser?.role || ""] || Colors.light.primary;
   const isOwnProfile = currentUser?.id === id;
+  const isOwner = !!(currentUser as any)?.isOwner;
+  const queryClient = useQueryClient();
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete this account?",
+      `This will permanently remove ${profileUser?.fullName || "this user"} along with their posts, replies, messages and jobs.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await apiRequest("DELETE", `/api/users/${id}`);
+              queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+              router.back();
+            } catch (e: any) {
+              Alert.alert("Failed", e?.message || "Could not delete account");
+            }
+          },
+        },
+      ],
+    );
+  };
 
   if (loadingUser) {
     return (
@@ -210,6 +236,18 @@ export default function UserProfileScreen() {
                 <Text style={styles.zoomCallBtnText}>
                   Join {profileUser.fullName ? `${profileUser.fullName.split(" ")[0]}'s` : "their"} Zoom Room
                 </Text>
+              </Pressable>
+            </View>
+          )}
+          {isOwner && (
+            <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+              <Pressable
+                style={({ pressed }) => [styles.deleteAccountBtn, pressed && { opacity: 0.85 }]}
+                onPress={handleDeleteAccount}
+                testID="delete-user-account"
+              >
+                <Ionicons name="trash" size={18} color="#fff" />
+                <Text style={styles.deleteAccountBtnText}>Delete Account</Text>
               </Pressable>
             </View>
           )}
@@ -305,6 +343,11 @@ const styles = StyleSheet.create({
     gap: 8, backgroundColor: Colors.light.primary, borderRadius: 12, paddingVertical: 12,
   },
   zoomCallBtnText: { fontFamily: "Inter_700Bold", fontSize: 14, color: Colors.light.dark },
+  deleteAccountBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
+    backgroundColor: "#E74C3C", borderRadius: 12, paddingVertical: 12,
+  },
+  deleteAccountBtnText: { fontFamily: "Inter_700Bold", fontSize: 14, color: "#fff" },
   section: { padding: 16, borderBottomWidth: 1, borderBottomColor: "#1A1A1A" },
   sectionTitle: { fontFamily: "Inter_600SemiBold", fontSize: 14, color: Colors.light.primary, marginBottom: 10 },
   bioText: { fontFamily: "Inter_400Regular", fontSize: 14, color: "#CCC", lineHeight: 22 },

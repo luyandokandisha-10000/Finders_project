@@ -60,6 +60,7 @@ Preferred communication style: Simple, everyday language.
 - **User Profile View** (`/user/:id`): Avatar, role badge, bio, skills chips, phone/email, recent posts, Message + Hire buttons
 - **Hire Flow**: `POST /api/users/:id/hire` sends a "hire" type notification to the target user
 - **Zoom Calls**: Users save a personal Zoom Meeting Link in profile. Chat header has a video icon that posts a tappable Zoom-call card into the conversation and opens Zoom via `Linking.openURL`. Zoom URLs in any message render as a special "Tap to join" call bubble. User profiles show a "Join their Zoom Room" CTA when the other user has a link set
+- **Owner Admin Mode**: The hardcoded owner email `luyando10000@gmail.com` is detected server-side; every user payload (login/register/me/profile) is stamped with `isOwner: true/false` (no DB column needed). Backend exposes `DELETE /api/posts/:id` and `DELETE /api/users/:id` guarded by a `requireOwner` middleware that cascades through replies, likes, notifications, jobs, conversations, messages and auth tokens. Frontend shows a red trash icon on every post card and a red "Delete Account" button on `/user/[id]` only when `currentUser.isOwner` is true (and never on the owner's own profile). Both actions confirm via `Alert.alert` before deleting
 - **Image Upload**: Base64 encoded via expo-image-picker, stored directly in DB (avatarUrl, imageUrl fields)
 
 ### Build & Deployment

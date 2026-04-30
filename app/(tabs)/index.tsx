@@ -14,6 +14,7 @@ import {
   Share,
   Animated,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
@@ -388,7 +389,7 @@ function ImageLightbox({ uri, visible, onClose }: { uri: string; visible: boolea
   );
 }
 
-function PostCard({ post, currentUserId }: { post: Post & { user?: User; likedByMe?: boolean; replyCount?: number }; currentUserId?: string }) {
+function PostCard({ post, currentUserId, isOwner }: { post: Post & { user?: User; likedByMe?: boolean; replyCount?: number }; currentUserId?: string; isOwner?: boolean }) {
   const queryClient = useQueryClient();
   const [liked, setLiked] = useState<boolean>(!!post.likedByMe);
   const [likesCount, setLikesCount] = useState(post.likes ?? 0);
@@ -431,6 +432,28 @@ function PostCard({ post, currentUserId }: { post: Post & { user?: User; likedBy
     }
   };
 
+  const handleDeletePost = () => {
+    Alert.alert(
+      "Delete post?",
+      "This will permanently remove the post, its replies and likes.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await apiRequest("DELETE", `/api/posts/${post.id}`);
+              queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+            } catch (e: any) {
+              Alert.alert("Failed", e?.message || "Could not delete post");
+            }
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <View style={styles.postCard}>
       <View style={styles.postHeader}>
@@ -442,6 +465,16 @@ function PostCard({ post, currentUserId }: { post: Post & { user?: User; likedBy
           <Text style={styles.postRole}>{post.user?.role || "Member"}</Text>
         </Pressable>
         <Text style={styles.postTime}>{timeAgo}</Text>
+        {isOwner && (
+          <Pressable
+            onPress={handleDeletePost}
+            hitSlop={10}
+            style={{ marginLeft: 8, padding: 4 }}
+            testID={`delete-post-${post.id}`}
+          >
+            <Ionicons name="trash-outline" size={18} color="#E74C3C" />
+          </Pressable>
+        )}
       </View>
 
       <Text style={styles.postContent}>{post.content}</Text>
@@ -511,7 +544,7 @@ export default function HomeScreen() {
       <FlatList
         data={posts || []}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <PostCard post={item} currentUserId={user?.id} />}
+        renderItem={({ item }) => <PostCard post={item} currentUserId={user?.id} isOwner={!!(user as any)?.isOwner} />}
         contentContainerStyle={[
           styles.listContent,
           (!posts || posts.length === 0) && styles.emptyListContent,

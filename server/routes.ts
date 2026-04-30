@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
 import { randomBytes } from "crypto";
-import { registerSchema, loginSchema } from "@shared/schema";
+import { registerSchema, loginSchema, users, posts, postLikes, postReplies, replyLikes, conversations, conversationParticipants, messages, notifications, jobs } from "@shared/schema";
 import {
   createUser,
   getUserByEmail,
@@ -28,9 +28,30 @@ import {
   getUnreadNotificationCount,
 } from "./storage";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, or, inArray } from "drizzle-orm";
 import { pgTable, text, varchar, timestamp } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+
+const OWNER_EMAIL = "luyando10000@gmail.com";
+
+function serializeUser(user: any) {
+  if (!user) return user;
+  return {
+    ...user,
+    password: undefined,
+    isOwner: (user.email || "").toLowerCase() === OWNER_EMAIL,
+  };
+}
+
+async function requireOwner(req: Request, res: Response, next: Function) {
+  const userId = (req as any).userId as string | undefined;
+  if (!userId) return res.status(401).json({ message: "Not authenticated" });
+  const user = await getUserById(userId);
+  if (!user || (user.email || "").toLowerCase() !== OWNER_EMAIL) {
+    return res.status(403).json({ message: "Forbidden: owner only" });
+  }
+  next();
+}
 
 const tokens = pgTable("auth_tokens", {
   token: varchar("token").primaryKey(),
@@ -114,7 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await createUser(parsed.data.email, parsed.data.password, parsed.data.fullName, role);
       const token = generateToken();
       await saveToken(token, user.id);
-      res.json({ user: { ...user, password: undefined }, token });
+      res.json({ user: serializeUser(user), token });
     } catch (error: any) {
       console.error("Register error:", error);
       res.status(500).json({ message: "Registration failed" });
@@ -133,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const token = generateToken();
       await saveToken(token, user.id);
-      res.json({ user: { ...user, password: undefined }, token });
+      res.json({ user: serializeUser(user), token });
     } catch (error: any) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Login failed" });
@@ -147,7 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!userId) return res.status(401).json({ message: "Invalid or expired token" });
     const user = await getUserById(userId);
     if (!user) return res.status(401).json({ message: "User not found" });
-    res.json({ ...user, password: undefined });
+    res.json(serializeUser(user));
   });
 
   app.post("/api/auth/logout", async (req: Request, res: Response) => {
@@ -159,13 +180,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/profile", requireAuth as any, async (req: Request, res: Response) => {
     const userId = (req as any).userId;
     const user = await updateUser(userId, req.body);
-    res.json({ ...user, password: undefined });
+    res.json(serializeUser(user));
   });
 
   app.get("/api/profile/:id", async (req: Request, res: Response) => {
     const user = await getUserById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
-    res.json({ ...user, password: undefined });
+    res.json(serializeUser(user));
+  });
+
+  app.delete("/api/posts/:id", requireAuth as any, requireOwner as any, async (req: Request, res: Response) => {
+    const postId = req.params.id;
+    try {
+      const replies = await db.select({ id: postReplies.id }).from(postReplies).where(eq(postReplies.postId, postId));
+      const replyIds = replies.map(r => r.id);
+      if (replyIds.length > 0) {
+        await db.delete(replyLikes).where(inArray(replyLikes.replyId, replyIds));
+      }
+      await db.delete(postReplies).where(eq(postReplies.postId, postId));
+      await db.delete(postLikes).where(eq(postLikes.postId, postId));
+      await db.delete(notifications).where(eq(notifications.postId, postId));
+      await db.delete(posts).where(eq(posts.id, postId));
+      res.json({ success: true });
+    } catch (e: any) {
+      console.error("Delete post error:", e);
+      res.status(500).json({ message: "Failed to delete post" });
+    }
+  });
+
+  app.delete("/api/users/:id", requireAuth as any, requireOwner as any, async (req: Request, res: Response) => {
+    const targetId = req.params.id;
+    const ownerId = (req as any).userId;
+    if (targetId === ownerId) {
+      return res.status(400).json({ message: "Cannot delete the owner account" });
+    }
+    try {
+      const userPostsRows = await db.select({ id: posts.id }).from(posts).where(eq(posts.userId, targetId));
+      const userPostIds = userPostsRows.map(p => p.id);
+      if (userPostIds.length > 0) {
+        const repliesOnUserPosts = await db.select({ id: postReplies.id }).from(postReplies).where(inArray(postReplies.postId, userPostIds));
+        const replyIdsForUserPosts = repliesOnUserPosts.map(r => r.id);
+        if (replyIdsForUserPosts.length > 0) {
+          await db.delete(replyLikes).where(inArray(replyLikes.replyId, replyIdsForUserPosts));
+        }
+        await db.delete(postReplies).where(inArray(postReplies.postId, userPostIds));
+        await db.delete(postLikes).where(inArray(postLikes.postId, userPostIds));
+        await db.delete(notifications).where(inArray(notifications.postId, userPostIds));
+      }
+
+      const userReplyRows = await db.select({ id: postReplies.id }).from(postReplies).where(eq(postReplies.userId, targetId));
+      const userReplyIds = userReplyRows.map(r => r.id);
+      if (userReplyIds.length > 0) {
+        await db.delete(replyLikes).where(inArray(replyLikes.replyId, userReplyIds));
+      }
+      await db.delete(replyLikes).where(eq(replyLikes.userId, targetId));
+      await db.delete(postReplies).where(eq(postReplies.userId, targetId));
+      await db.delete(postLikes).where(eq(postLikes.userId, targetId));
+      await db.delete(posts).where(eq(posts.userId, targetId));
+      await db.delete(jobs).where(eq(jobs.userId, targetId));
+
+      const userConvRows = await db.select({ conversationId: conversationParticipants.conversationId }).from(conversationParticipants).where(eq(conversationParticipants.userId, targetId));
+      const convIds = userConvRows.map(c => c.conversationId);
+      if (convIds.length > 0) {
+        await db.delete(messages).where(inArray(messages.conversationId, convIds));
+        await db.delete(conversationParticipants).where(inArray(conversationParticipants.conversationId, convIds));
+        await db.delete(conversations).where(inArray(conversations.id, convIds));
+      }
+      await db.delete(messages).where(eq(messages.senderId, targetId));
+
+      await db.delete(notifications).where(or(eq(notifications.userId, targetId), eq(notifications.actorId, targetId))!);
+      await db.execute(sql`DELETE FROM auth_tokens WHERE user_id = ${targetId}`);
+      await db.delete(users).where(eq(users.id, targetId));
+      res.json({ success: true });
+    } catch (e: any) {
+      console.error("Delete user error:", e);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
   });
 
   app.get("/api/posts", optionalAuth as any, async (req: Request, res: Response) => {

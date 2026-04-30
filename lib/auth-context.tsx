@@ -3,8 +3,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getQueryFn, setToken, clearToken, getToken, getApiUrl } from "./query-client";
 import type { User } from "@shared/schema";
 
+type AppUser = User & { isOwner?: boolean };
+
 interface AuthContextValue {
-  user: User | null;
+  user: AppUser | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, fullName?: string, role?: string) => Promise<void>;

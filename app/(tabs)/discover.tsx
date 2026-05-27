@@ -130,6 +130,7 @@ function JobCard({ job, isShortWork }: { job: Job & { user?: User }; isShortWork
 export default function DiscoverScreen() {
   const [filter, setFilter] = useState<FilterType>("people");
   const [search, setSearch] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
 
   const { data: users, isLoading: loadingUsers } = useQuery<User[]>({
     queryKey: ["/api/users"],
@@ -163,14 +164,18 @@ export default function DiscoverScreen() {
 
   const filteredJobs = useMemo(() => {
     const list = filter === "jobs" ? jobs : filter === "gigs" ? gigs : [];
-    if (!list || !search.trim()) return list || [];
+    if (!list) return [];
     const q = search.toLowerCase();
-    return list.filter(j =>
-      j.title?.toLowerCase().includes(q) ||
-      j.company?.toLowerCase().includes(q) ||
-      j.location?.toLowerCase().includes(q)
-    );
-  }, [jobs, gigs, search, filter]);
+    const lq = locationFilter.trim().toLowerCase();
+    return list.filter(j => {
+      const matchSearch = !q ||
+        j.title?.toLowerCase().includes(q) ||
+        j.company?.toLowerCase().includes(q) ||
+        j.location?.toLowerCase().includes(q);
+      const matchLocation = !lq || (j.location || "").toLowerCase().includes(lq);
+      return matchSearch && matchLocation;
+    });
+  }, [jobs, gigs, search, locationFilter, filter]);
 
   const isLoading = filter === "people" ? loadingUsers : filter === "jobs" ? loadingJobs : loadingGigs;
   const data: any[] = filter === "people" ? filteredUsers : filteredJobs;
@@ -198,7 +203,7 @@ export default function DiscoverScreen() {
           <Pressable
             key={f.key}
             style={[styles.filterChip, filter === f.key && styles.filterChipActive]}
-            onPress={() => { setFilter(f.key); setSearch(""); }}
+            onPress={() => { setFilter(f.key); setSearch(""); setLocationFilter(""); }}
           >
             <Ionicons
               name={f.icon}
@@ -221,6 +226,24 @@ export default function DiscoverScreen() {
           </Pressable>
         )}
       </View>
+
+      {(filter === "jobs" || filter === "gigs") && (
+        <View style={styles.locationBar}>
+          <Ionicons name="location-outline" size={16} color={locationFilter ? Colors.light.primary : "#888"} />
+          <TextInput
+            style={styles.locationInput}
+            placeholder="Filter by location (e.g. Nairobi, Remote...)"
+            value={locationFilter}
+            onChangeText={setLocationFilter}
+            placeholderTextColor="#555"
+          />
+          {locationFilter ? (
+            <Pressable onPress={() => setLocationFilter("")} hitSlop={8}>
+              <Ionicons name="close-circle" size={16} color="#888" />
+            </Pressable>
+          ) : null}
+        </View>
+      )}
 
       {isLoading ? (
         <View style={styles.center}>
@@ -288,6 +311,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#2A2A1A",
   },
   postJobText: { fontFamily: "Inter_500Medium", fontSize: 13, color: Colors.light.primary },
+  locationBar: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    backgroundColor: "#1E1E1E", marginHorizontal: 14, marginBottom: 4,
+    borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10,
+    borderWidth: 1, borderColor: "#333",
+  },
+  locationInput: {
+    flex: 1, fontFamily: "Inter_400Regular", fontSize: 13, color: "#FFF",
+  },
   list: { paddingBottom: 100 },
   emptyList: { flex: 1 },
   userCard: {

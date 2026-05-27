@@ -276,6 +276,12 @@ export default function UserProfileScreen() {
               <Text style={styles.detailText}>{profileUser.location}</Text>
             </View>
           ) : null}
+          {(profileUser as any).degrees ? (
+            <View style={styles.detailItem}>
+              <Ionicons name="school-outline" size={16} color={Colors.light.primary} />
+              <Text style={styles.detailText}>{(profileUser as any).degrees}</Text>
+            </View>
+          ) : null}
         </View>
       </View>
 

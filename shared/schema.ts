@@ -17,6 +17,7 @@ export const users = pgTable("users", {
   avatarUrl: text("avatar_url").default(""),
   phone: text("phone").default(""),
   zoomLink: text("zoom_link").default(""),
+  degrees: text("degrees").default(""),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

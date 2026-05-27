@@ -35,6 +35,7 @@ export default function ProfileTab() {
   const [skills, setSkills] = useState(user?.skills || "");
   const [phone, setPhone] = useState((user as any)?.phone || "");
   const [zoomLink, setZoomLink] = useState((user as any)?.zoomLink || "");
+  const [degrees, setDegrees] = useState((user as any)?.degrees || "");
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
@@ -73,7 +74,7 @@ export default function ProfileTab() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateProfile({ fullName, bio, location, skills, phone, zoomLink } as any);
+      await updateProfile({ fullName, bio, location, skills, phone, zoomLink, degrees } as any);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert("Saved", "Your profile has been updated.");
     } catch {
@@ -153,6 +154,7 @@ export default function ProfileTab() {
         { label: "Full Name", value: fullName, onChange: setFullName, placeholder: "Enter your full name", icon: "person-outline" as const },
         { label: "Phone", value: phone, onChange: setPhone, placeholder: "+1 (555) 000-0000", icon: "call-outline" as const, keyboardType: "phone-pad" as const },
         { label: "Location", value: location, onChange: setLocation, placeholder: "City, Country", icon: "location-outline" as const },
+        { label: "Degrees", value: degrees, onChange: setDegrees, placeholder: "BSc Computer Science, MBA...", icon: "school-outline" as const },
         { label: "Skills", value: skills, onChange: setSkills, placeholder: "JavaScript, Design, Marketing...", icon: "star-outline" as const },
         { label: "Zoom Meeting Link", value: zoomLink, onChange: setZoomLink, placeholder: "https://zoom.us/j/1234567890", icon: "videocam-outline" as const, keyboardType: "url" as const, autoCapitalize: "none" as const },
       ].map((field) => (

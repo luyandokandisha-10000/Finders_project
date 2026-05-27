@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
   FlatList,
+  TextInput,
   StyleSheet,
   Pressable,
   RefreshControl,
@@ -101,42 +102,78 @@ function JobCard({ job, currentUserId }: { job: Job & { user?: User }; currentUs
   );
 }
 
+function LocationBar({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <View style={styles.locationBar}>
+      <Ionicons name="location-outline" size={16} color={value ? Colors.light.primary : "#888"} />
+      <TextInput
+        style={styles.locationInput}
+        placeholder="Filter by location (e.g. Nairobi, Remote...)"
+        value={value}
+        onChangeText={onChange}
+        placeholderTextColor="#555"
+      />
+      {value ? (
+        <Pressable onPress={() => onChange("")} hitSlop={8}>
+          <Ionicons name="close-circle" size={16} color="#888" />
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
 export default function JobsScreen() {
   const { user } = useAuth();
+  const [locationFilter, setLocationFilter] = useState("");
+
   const { data: jobs, isLoading, refetch } = useQuery<(Job & { user?: User })[]>({
     queryKey: ["/api/jobs?shortWork=false"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
+  const filtered = useMemo(() => {
+    if (!jobs) return [];
+    const lq = locationFilter.trim().toLowerCase();
+    if (!lq) return jobs;
+    return jobs.filter(j => (j.location || "").toLowerCase().includes(lq));
+  }, [jobs, locationFilter]);
+
   return (
     <View style={styles.container}>
       <FlatList
-        data={jobs || []}
+        data={filtered}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <JobCard job={item} currentUserId={user?.id} />}
         contentContainerStyle={[
           styles.listContent,
-          (!jobs || jobs.length === 0) && styles.emptyListContent,
+          filtered.length === 0 && styles.emptyListContent,
         ]}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={Colors.light.primary} />
         }
-        scrollEnabled={!!(jobs && jobs.length > 0)}
+        scrollEnabled={filtered.length > 0}
         ListHeaderComponent={
-          <Pressable
-            style={styles.addBtn}
-            onPress={() => router.push("/create-job?shortWork=false")}
-          >
-            <Ionicons name="add-circle" size={20} color={Colors.light.primary} />
-            <Text style={styles.addBtnText}>Post a Job Opportunity</Text>
-          </Pressable>
+          <View>
+            <Pressable
+              style={styles.addBtn}
+              onPress={() => router.push("/create-job?shortWork=false")}
+            >
+              <Ionicons name="add-circle" size={20} color={Colors.light.primary} />
+              <Text style={styles.addBtnText}>Post a Job Opportunity</Text>
+            </Pressable>
+            <LocationBar value={locationFilter} onChange={setLocationFilter} />
+          </View>
         }
         ListEmptyComponent={
           !isLoading ? (
             <View style={styles.emptyState}>
               <Ionicons name="briefcase-outline" size={48} color="#555" />
-              <Text style={styles.emptyTitle}>No job opportunities yet</Text>
-              <Text style={styles.emptySubtitle}>Post full-time, part-time, or remote job listings</Text>
+              <Text style={styles.emptyTitle}>
+                {locationFilter ? "No jobs in that location" : "No job opportunities yet"}
+              </Text>
+              <Text style={styles.emptySubtitle}>
+                {locationFilter ? "Try a different location or clear the filter" : "Post full-time, part-time, or remote job listings"}
+              </Text>
             </View>
           ) : null
         }
@@ -175,6 +212,25 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
     fontSize: 14,
     color: Colors.light.primary,
+  },
+  locationBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#1E1E1E",
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: "#333",
+  },
+  locationInput: {
+    flex: 1,
+    fontFamily: "Inter_400Regular",
+    fontSize: 13,
+    color: "#FFF",
   },
   card: {
     backgroundColor: "#1E1E1E",

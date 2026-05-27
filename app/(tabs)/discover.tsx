@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Pressable,
   ActivityIndicator,
-  ScrollView,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,7 +14,7 @@ import { router } from "expo-router";
 import { Image } from "expo-image";
 import { getQueryFn } from "@/lib/query-client";
 import Colors from "@/constants/colors";
-import type { User, Job } from "@shared/schema";
+import type { User } from "@shared/schema";
 
 const ROLE_COLORS: Record<string, string> = {
   Recruiter: "#8B5CF6",
@@ -23,14 +22,6 @@ const ROLE_COLORS: Record<string, string> = {
   Intern: "#10B981",
   Hustler: "#F59E0B",
 };
-
-type FilterType = "people" | "jobs" | "gigs";
-
-const FILTERS: { key: FilterType; label: string; icon: any }[] = [
-  { key: "people", label: "People", icon: "people-outline" },
-  { key: "jobs", label: "Jobs", icon: "briefcase-outline" },
-  { key: "gigs", label: "Short Work", icon: "flash-outline" },
-];
 
 function Avatar({ uri, size = 48 }: { uri?: string | null; size?: number }) {
   if (uri && uri.length > 5) {
@@ -77,81 +68,16 @@ function UserCard({ user }: { user: User }) {
   );
 }
 
-function JobCard({ job, isShortWork }: { job: Job & { user?: User }; isShortWork?: boolean }) {
-  return (
-    <View style={styles.jobCard}>
-      <View style={styles.jobHeader}>
-        <View style={[styles.jobIcon, { backgroundColor: isShortWork ? "#2A2A1A" : "#1A1A2A" }]}>
-          <Ionicons
-            name={isShortWork ? "flash" : "briefcase"}
-            size={20}
-            color={isShortWork ? "#F59E0B" : Colors.light.primary}
-          />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.jobTitle}>{job.title}</Text>
-          <Text style={styles.jobCompany}>{job.company}</Text>
-        </View>
-        {job.salary ? (
-          <View style={styles.salaryBadge}>
-            <Text style={styles.salaryText}>{job.salary}</Text>
-          </View>
-        ) : null}
-      </View>
-      <Text style={styles.jobDesc} numberOfLines={2}>{job.description}</Text>
-      <View style={styles.jobMeta}>
-        {job.location ? (
-          <View style={styles.metaItem}>
-            <Ionicons name="location-outline" size={13} color="#888" />
-            <Text style={styles.metaText}>{job.location}</Text>
-          </View>
-        ) : null}
-        <View style={styles.metaItem}>
-          <Ionicons name="time-outline" size={13} color="#888" />
-          <Text style={styles.metaText}>{job.type || (isShortWork ? "Short-term" : "Full-time")}</Text>
-        </View>
-      </View>
-      <View style={styles.jobFooter}>
-        <Text style={styles.postedBy}>Posted by {job.user?.fullName || "Unknown"}</Text>
-        {job.user?.id ? (
-          <Pressable
-            style={styles.viewProfile}
-            onPress={() => router.push(`/user/${job.user!.id}`)}
-          >
-            <Text style={styles.viewProfileText}>View Profile</Text>
-            <Ionicons name="arrow-forward" size={13} color={Colors.light.primary} />
-          </Pressable>
-        ) : null}
-      </View>
-    </View>
-  );
-}
-
 export default function DiscoverScreen() {
-  const [filter, setFilter] = useState<FilterType>("people");
   const [search, setSearch] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
 
-  const { data: users, isLoading: loadingUsers } = useQuery<User[]>({
+  const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    enabled: filter === "people",
-  });
-
-  const { data: jobs, isLoading: loadingJobs } = useQuery<(Job & { user?: User })[]>({
-    queryKey: ["/api/jobs?shortWork=false"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-    enabled: filter === "jobs",
-  });
-
-  const { data: gigs, isLoading: loadingGigs } = useQuery<(Job & { user?: User })[]>({
-    queryKey: ["/api/jobs?shortWork=true"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-    enabled: filter === "gigs",
   });
 
   const filteredUsers = useMemo(() => {
-    if (!users || filter !== "people") return [];
+    if (!users) return [];
     if (!search.trim()) return users;
     const q = search.toLowerCase();
     return users.filter(u =>
@@ -160,25 +86,7 @@ export default function DiscoverScreen() {
       u.skills?.toLowerCase().includes(q) ||
       u.location?.toLowerCase().includes(q)
     );
-  }, [users, search, filter]);
-
-  const filteredJobs = useMemo(() => {
-    const list = filter === "jobs" ? jobs : filter === "gigs" ? gigs : [];
-    if (!list) return [];
-    const q = search.toLowerCase();
-    const lq = locationFilter.trim().toLowerCase();
-    return list.filter(j => {
-      const matchSearch = !q ||
-        j.title?.toLowerCase().includes(q) ||
-        j.company?.toLowerCase().includes(q) ||
-        j.location?.toLowerCase().includes(q);
-      const matchLocation = !lq || (j.location || "").toLowerCase().includes(lq);
-      return matchSearch && matchLocation;
-    });
-  }, [jobs, gigs, search, locationFilter, filter]);
-
-  const isLoading = filter === "people" ? loadingUsers : filter === "jobs" ? loadingJobs : loadingGigs;
-  const data: any[] = filter === "people" ? filteredUsers : filteredJobs;
+  }, [users, search]);
 
   return (
     <View style={styles.container}>
@@ -186,7 +94,7 @@ export default function DiscoverScreen() {
         <Ionicons name="search" size={18} color="#888" />
         <TextInput
           style={styles.searchInput}
-          placeholder={filter === "people" ? "Search people, roles, skills..." : "Search jobs, companies..."}
+          placeholder="Search people, roles, skills..."
           value={search}
           onChangeText={setSearch}
           placeholderTextColor="#888"
@@ -198,85 +106,28 @@ export default function DiscoverScreen() {
         ) : null}
       </View>
 
-      <View style={styles.filterRow}>
-        {FILTERS.map(f => (
-          <Pressable
-            key={f.key}
-            style={[styles.filterChip, filter === f.key && styles.filterChipActive]}
-            onPress={() => { setFilter(f.key); setSearch(""); setLocationFilter(""); }}
-          >
-            <Ionicons
-              name={f.icon}
-              size={15}
-              color={filter === f.key ? Colors.light.primary : "#888"}
-            />
-            <Text style={[styles.filterLabel, filter === f.key && styles.filterLabelActive]}>
-              {f.label}
-            </Text>
-          </Pressable>
-        ))}
-
-        {(filter === "jobs" || filter === "gigs") && (
-          <Pressable
-            style={styles.postJobBtn}
-            onPress={() => router.push(`/create-job?shortWork=${filter === "gigs"}`)}
-          >
-            <Ionicons name="add" size={16} color={Colors.light.primary} />
-            <Text style={styles.postJobText}>Post</Text>
-          </Pressable>
-        )}
-      </View>
-
-      {(filter === "jobs" || filter === "gigs") && (
-        <View style={styles.locationBar}>
-          <Ionicons name="location-outline" size={16} color={locationFilter ? Colors.light.primary : "#888"} />
-          <TextInput
-            style={styles.locationInput}
-            placeholder="Filter by location (e.g. Nairobi, Remote...)"
-            value={locationFilter}
-            onChangeText={setLocationFilter}
-            placeholderTextColor="#555"
-          />
-          {locationFilter ? (
-            <Pressable onPress={() => setLocationFilter("")} hitSlop={8}>
-              <Ionicons name="close-circle" size={16} color="#888" />
-            </Pressable>
-          ) : null}
-        </View>
-      )}
-
       {isLoading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.light.primary} />
         </View>
       ) : (
         <FlatList
-          data={data}
+          data={filteredUsers}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) =>
-            filter === "people" ? (
-              <UserCard user={item} />
-            ) : (
-              <JobCard job={item} isShortWork={filter === "gigs"} />
-            )
-          }
+          renderItem={({ item }) => <UserCard user={item} />}
           contentContainerStyle={[
             styles.list,
-            data.length === 0 && styles.emptyList,
+            filteredUsers.length === 0 && styles.emptyList,
           ]}
-          scrollEnabled={data.length > 0}
+          scrollEnabled={filteredUsers.length > 0}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons
-                name={filter === "people" ? "people-outline" : filter === "jobs" ? "briefcase-outline" : "flash-outline"}
-                size={48}
-                color="#444"
-              />
+              <Ionicons name="people-outline" size={48} color="#444" />
               <Text style={styles.emptyTitle}>
-                {search ? "No results found" : filter === "people" ? "No users yet" : filter === "jobs" ? "No jobs posted" : "No gigs posted"}
+                {search ? "No results found" : "No users yet"}
               </Text>
               <Text style={styles.emptySubtitle}>
-                {search ? "Try a different search" : filter !== "people" ? "Be the first to post!" : "Join the community!"}
+                {search ? "Try a different search" : "Join the community!"}
               </Text>
             </View>
           }
@@ -291,36 +142,11 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   searchBar: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: "#1E1E1E", marginHorizontal: 14, marginTop: 10,
+    backgroundColor: "#1E1E1E", marginHorizontal: 14, marginTop: 10, marginBottom: 4,
     borderRadius: 12, paddingHorizontal: 12, borderWidth: 1, borderColor: "#333", gap: 8,
   },
   searchInput: { flex: 1, paddingVertical: 12, fontFamily: "Inter_400Regular", fontSize: 14, color: "#FFF" },
-  filterRow: { flexDirection: "row", gap: 8, paddingHorizontal: 14, paddingVertical: 10, alignItems: "center" },
-  filterChip: {
-    flexDirection: "row", alignItems: "center", gap: 5,
-    paddingHorizontal: 12, paddingVertical: 7,
-    borderRadius: 20, backgroundColor: "#1E1E1E", borderWidth: 1, borderColor: "#333",
-  },
-  filterChipActive: { borderColor: Colors.light.primary, backgroundColor: "#2A2A1A" },
-  filterLabel: { fontFamily: "Inter_500Medium", fontSize: 13, color: "#888" },
-  filterLabelActive: { color: Colors.light.primary },
-  postJobBtn: {
-    flexDirection: "row", alignItems: "center", gap: 3,
-    marginLeft: "auto" as any, paddingHorizontal: 12, paddingVertical: 7,
-    borderRadius: 20, borderWidth: 1, borderColor: Colors.light.primary + "80",
-    backgroundColor: "#2A2A1A",
-  },
-  postJobText: { fontFamily: "Inter_500Medium", fontSize: 13, color: Colors.light.primary },
-  locationBar: {
-    flexDirection: "row", alignItems: "center", gap: 8,
-    backgroundColor: "#1E1E1E", marginHorizontal: 14, marginBottom: 4,
-    borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10,
-    borderWidth: 1, borderColor: "#333",
-  },
-  locationInput: {
-    flex: 1, fontFamily: "Inter_400Regular", fontSize: 13, color: "#FFF",
-  },
-  list: { paddingBottom: 100 },
+  list: { paddingBottom: 100, paddingTop: 6 },
   emptyList: { flex: 1 },
   userCard: {
     flexDirection: "row", alignItems: "center", gap: 12,
@@ -334,24 +160,6 @@ const styles = StyleSheet.create({
   userBio: { fontFamily: "Inter_400Regular", fontSize: 12, color: "#AAA" },
   locRow: { flexDirection: "row", alignItems: "center", gap: 3 },
   locText: { fontFamily: "Inter_400Regular", fontSize: 12, color: "#888" },
-  jobCard: {
-    backgroundColor: "#1E1E1E", marginHorizontal: 14, marginVertical: 4,
-    borderRadius: 14, padding: 14, gap: 10,
-  },
-  jobHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
-  jobIcon: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  jobTitle: { fontFamily: "Inter_600SemiBold", fontSize: 15, color: "#FFF" },
-  jobCompany: { fontFamily: "Inter_400Regular", fontSize: 13, color: "#AAA" },
-  salaryBadge: { backgroundColor: "#1A2A1A", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  salaryText: { fontFamily: "Inter_600SemiBold", fontSize: 12, color: "#10B981" },
-  jobDesc: { fontFamily: "Inter_400Regular", fontSize: 13, color: "#CCC", lineHeight: 19 },
-  jobMeta: { flexDirection: "row", gap: 14 },
-  metaItem: { flexDirection: "row", alignItems: "center", gap: 4 },
-  metaText: { fontFamily: "Inter_400Regular", fontSize: 12, color: "#888" },
-  jobFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderTopWidth: 1, borderTopColor: "#2E2E2E", paddingTop: 8 },
-  postedBy: { fontFamily: "Inter_400Regular", fontSize: 12, color: "#888" },
-  viewProfile: { flexDirection: "row", alignItems: "center", gap: 4 },
-  viewProfileText: { fontFamily: "Inter_500Medium", fontSize: 12, color: Colors.light.primary },
   empty: { flex: 1, justifyContent: "center", alignItems: "center", padding: 40, gap: 12 },
   emptyTitle: { fontFamily: "Inter_600SemiBold", fontSize: 18, color: "#FFF" },
   emptySubtitle: { fontFamily: "Inter_400Regular", fontSize: 14, color: "#888", textAlign: "center" },

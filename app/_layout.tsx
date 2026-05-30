@@ -45,6 +45,7 @@ function RootLayoutNav() {
       <Stack.Screen name="conversation/[id]" options={{ title: "Chat" }} />
       <Stack.Screen name="job/[id]" options={{ title: "Job Details" }} />
       <Stack.Screen name="menu" options={{ title: "Menu", presentation: "modal", ...headerTheme }} />
+      <Stack.Screen name="video-call/[id]" options={{ headerShown: false, presentation: "fullScreenModal" }} />
     </Stack>
   );
 }

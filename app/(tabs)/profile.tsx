@@ -34,7 +34,6 @@ export default function ProfileTab() {
   const [location, setLocation] = useState(user?.location || "");
   const [skills, setSkills] = useState(user?.skills || "");
   const [phone, setPhone] = useState((user as any)?.phone || "");
-  const [zoomLink, setZoomLink] = useState((user as any)?.zoomLink || "");
   const [degrees, setDegrees] = useState((user as any)?.degrees || "");
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -74,7 +73,7 @@ export default function ProfileTab() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateProfile({ fullName, bio, location, skills, phone, zoomLink, degrees } as any);
+      await updateProfile({ fullName, bio, location, skills, phone, degrees } as any);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert("Saved", "Your profile has been updated.");
     } catch {
@@ -156,7 +155,6 @@ export default function ProfileTab() {
         { label: "Location", value: location, onChange: setLocation, placeholder: "City, Country", icon: "location-outline" as const },
         { label: "Degrees", value: degrees, onChange: setDegrees, placeholder: "BSc Computer Science, MBA...", icon: "school-outline" as const },
         { label: "Skills", value: skills, onChange: setSkills, placeholder: "JavaScript, Design, Marketing...", icon: "star-outline" as const },
-        { label: "Zoom Meeting Link", value: zoomLink, onChange: setZoomLink, placeholder: "https://zoom.us/j/1234567890", icon: "videocam-outline" as const, keyboardType: "url" as const, autoCapitalize: "none" as const },
       ].map((field) => (
         <View key={field.label} style={styles.fieldGroup}>
           <Text style={styles.fieldLabel}>{field.label}</Text>

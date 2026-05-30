@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-  Linking,
 } from "react-native";
 import { useLocalSearchParams, router, useNavigation } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -90,17 +89,6 @@ export default function UserProfileScreen() {
       Alert.alert("Error", "Could not start conversation. Please try again.");
     } finally {
       setMessagingLoading(false);
-    }
-  };
-
-  const handleZoomCall = async () => {
-    const link = ((profileUser as any)?.zoomLink || "").trim();
-    if (!link) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    try {
-      await Linking.openURL(link);
-    } catch {
-      Alert.alert("Could not open Zoom", "The link may be invalid.");
     }
   };
 
@@ -225,20 +213,6 @@ export default function UserProfileScreen() {
               )}
             </Pressable>
           </View>
-          {((profileUser as any)?.zoomLink || "").trim().length > 0 && (
-            <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
-              <Pressable
-                style={({ pressed }) => [styles.zoomCallBtn, pressed && { opacity: 0.85 }]}
-                onPress={handleZoomCall}
-                testID="user-zoom-call"
-              >
-                <Ionicons name="videocam" size={18} color={Colors.light.dark} />
-                <Text style={styles.zoomCallBtnText}>
-                  Join {profileUser.fullName ? `${profileUser.fullName.split(" ")[0]}'s` : "their"} Zoom Room
-                </Text>
-              </Pressable>
-            </View>
-          )}
           {isOwner && (
             <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
               <Pressable
@@ -344,11 +318,6 @@ const styles = StyleSheet.create({
     gap: 8, borderWidth: 1.5, borderColor: Colors.light.primary, borderRadius: 12, paddingVertical: 13,
   },
   actionSecondaryText: { fontFamily: "Inter_700Bold", fontSize: 15, color: Colors.light.primary },
-  zoomCallBtn: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center",
-    gap: 8, backgroundColor: Colors.light.primary, borderRadius: 12, paddingVertical: 12,
-  },
-  zoomCallBtnText: { fontFamily: "Inter_700Bold", fontSize: 14, color: Colors.light.dark },
   deleteAccountBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
     backgroundColor: "#E74C3C", borderRadius: 12, paddingVertical: 12,

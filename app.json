@@ -27,7 +27,13 @@
       }
     },
     "web": {
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "name": "Finders",
+      "shortName": "Finders",
+      "description": "The social app connecting recruiters, job seekers, interns, and hustlers. Post jobs, discover short-work gigs, and get hired.",
+      "themeColor": "#D4A017",
+      "backgroundColor": "#1A1A1A",
+      "lang": "en"
     },
     "plugins": [
       [

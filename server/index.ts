@@ -201,6 +201,41 @@ function configureExpoAndLanding(app: express.Application) {
   app.use("/assets", express.static(path.resolve(process.cwd(), "assets")));
   app.use(express.static(path.resolve(process.cwd(), "static-build")));
 
+  app.get("/robots.txt", (_req: Request, res: Response) => {
+    res.setHeader("Content-Type", "text/plain");
+    res.send(
+      [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /api/",
+        "",
+        `Sitemap: https://${process.env.REPLIT_DEV_DOMAIN || "localhost:5000"}/sitemap.xml`,
+      ].join("\n"),
+    );
+  });
+
+  app.get("/sitemap.xml", (req: Request, res: Response) => {
+    const forwardedProto = req.header("x-forwarded-proto");
+    const protocol = forwardedProto || req.protocol || "https";
+    const forwardedHost = req.header("x-forwarded-host");
+    const host = forwardedHost || req.get("host");
+    const baseUrl = `${protocol}://${host}`;
+    const now = new Date().toISOString().split("T")[0];
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <mobile:mobile/>
+  </url>
+</urlset>`;
+    res.setHeader("Content-Type", "application/xml; charset=utf-8");
+    res.send(sitemap);
+  });
+
   log("Expo routing: Checking expo-platform header on / and /manifest");
 }
 

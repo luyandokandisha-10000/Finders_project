@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "DAtNrVDstkKpOhRoI8KVS"
+uri = "file://Finders_Deck.pptx"
+type = "slides"
+title = "Finders — Project Slide Deck"

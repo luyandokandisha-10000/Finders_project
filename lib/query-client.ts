@@ -17,7 +17,7 @@ export async function clearToken(): Promise<void> {
 }
 
 export function getApiUrl(): string {
-  let host = process.env.EXPO_PUBLIC_DOMAIN;
+  let host = "0a5e6ab7-fd92-4def-a18d-9f86aa5d6f51-00-1ihr7lkio76zf.riker.replit.dev:5000";
 
   if (!host) {
     throw new Error("EXPO_PUBLIC_DOMAIN is not set");

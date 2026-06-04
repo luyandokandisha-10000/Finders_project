@@ -21,6 +21,7 @@ export default function VideoCallScreen() {
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [webviewKey, setWebviewKey] = useState(0);
 
   const roomName = `finders-call-${id}`;
   const displayName = encodeURIComponent(user?.fullName || "Finders User");
@@ -31,14 +32,18 @@ export default function VideoCallScreen() {
     router.back();
   };
 
+  const handleRetry = () => {
+    setError(false);
+    setLoading(true);
+    setWebviewKey((k) => k + 1);
+  };
+
   if (Platform.OS === "web") {
     return (
       <View style={[styles.webFallback, { paddingTop: insets.top + 20 }]}>
         <Ionicons name="videocam" size={48} color={Colors.light.primary} />
         <Text style={styles.webTitle}>Video Call</Text>
-        <Text style={styles.webSub}>
-          Open this on your phone to join the call.
-        </Text>
+        <Text style={styles.webSub}>Open this on your phone to join the call.</Text>
         <Text style={styles.webRoom}>Room: {roomName}</Text>
         <Pressable style={styles.webBackBtn} onPress={() => router.back()}>
           <Text style={styles.webBackText}>Go Back</Text>
@@ -50,18 +55,31 @@ export default function VideoCallScreen() {
   return (
     <View style={styles.container}>
       <WebView
+        key={webviewKey}
         source={{ uri: callUrl }}
         style={styles.webview}
+        originWhitelist={["*"]}
         allowsInlineMediaPlayback
         mediaPlaybackRequiresUserAction={false}
-        onLoadStart={() => setLoading(true)}
+        onLoadStart={() => { setLoading(true); setError(false); }}
         onLoad={() => setLoading(false)}
         onError={() => { setLoading(false); setError(true); }}
+        onHttpError={() => { setLoading(false); setError(true); }}
         javaScriptEnabled
         domStorageEnabled
+        allowsFullscreenVideo
+        allowsProtectedMedia
+        mixedContentMode="compatibility"
+        androidLayerType="hardware"
+        setSupportMultipleWindows={false}
+        geolocationEnabled={false}
         cameraEnabled
         microphoneEnabled
-        allowsFullscreenVideo
+        userAgent={
+          Platform.OS === "android"
+            ? "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+            : undefined
+        }
       />
 
       {loading && !error && (
@@ -76,7 +94,7 @@ export default function VideoCallScreen() {
           <Ionicons name="videocam-off" size={48} color="#888" />
           <Text style={styles.errorTitle}>Couldn't connect</Text>
           <Text style={styles.errorSub}>Check your internet connection and try again.</Text>
-          <Pressable style={styles.retryBtn} onPress={() => { setError(false); setLoading(true); }}>
+          <Pressable style={styles.retryBtn} onPress={handleRetry}>
             <Text style={styles.retryText}>Retry</Text>
           </Pressable>
         </View>

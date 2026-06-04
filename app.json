@@ -15,14 +15,24 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.myapp"
+      "bundleIdentifier": "com.myapp",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Finders uses your camera for video calls.",
+        "NSMicrophoneUsageDescription": "Finders uses your microphone for video calls."
+      }
     },
     "android": {
       "package": "com.myapp",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE"
+      ],
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
+        "backgroundColor": "#000000",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       }
     },
@@ -48,6 +58,14 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {
+        "origin": "https://replit.com/"
+      },
+      "eas": {
+        "projectId": "af234638-014c-4f61-bfda-3b58a8658d51"
+      }
     }
   }
 }

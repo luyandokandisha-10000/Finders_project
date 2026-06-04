@@ -7,7 +7,6 @@ import {
   TextInput,
   Pressable,
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
   Alert,
 } from "react-native";
@@ -15,6 +14,8 @@ import { useLocalSearchParams, router, useNavigation } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { useHeaderHeight } from "@react-navigation/elements";
 import { getQueryFn, apiRequest } from "@/lib/query-client";
 import Colors from "@/constants/colors";
 import { useAuth } from "@/lib/auth-context";
@@ -56,6 +57,7 @@ export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user: currentUser } = useAuth();
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -133,8 +135,8 @@ export default function ConversationScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+      behavior="padding"
+      keyboardVerticalOffset={headerHeight}
     >
       {isLoading && !messages ? (
         <View style={styles.center}>
@@ -213,6 +215,7 @@ export default function ConversationScreen() {
           multiline
           maxLength={1000}
           onSubmitEditing={handleSend}
+          returnKeyType="send"
         />
         <Pressable
           style={[styles.sendBtn, (!text.trim() || sending) && { opacity: 0.4 }]}
